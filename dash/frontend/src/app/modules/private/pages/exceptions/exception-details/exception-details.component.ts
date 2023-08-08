@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AlertService } from '@full-fledged/alerts';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { ExceptionsService } from '../../../../../core/services/exceptions.service';
 import { IException } from '../../../../../core/entities/IException';
-import { ConfirmationDialogComponent } from '../../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { CommentService } from '../../../../../core/services/comment.service';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { JwtAuthService } from '../../../../../core/services/jwt-auth.service';
 import { IComment } from '../../../../../core/entities/IComment';
 import { Observable } from 'rxjs';
 import {AlertDialogComponent} from '../../../../shared/alert-dialog/alert-dialog.component';
+import {take} from 'rxjs/operators';
 
 @Component({
   selector: 'app-exception-details',
@@ -21,7 +21,7 @@ export class ExceptionDetailsComponent implements OnInit {
   exceptionId: number;
   exception: IException;
   commentForm: FormGroup;
-  comments$: Observable<IComment[]>;
+  comments: IComment[];
   isSubmitting = false;
 
   constructor(
@@ -50,9 +50,9 @@ export class ExceptionDetailsComponent implements OnInit {
   }
 
   getExceptionDetails(id: number) {
-    this.exceptionsService.getExceptionById(id).subscribe(
-      response => {this.exception = response.data[0]; console.log(this.exception); },
-        error => console.log(error));
+    this.exceptionsService.getExceptionById(id).pipe(take(1)).subscribe({
+      next: response => this.exception = response.data[0]
+    });
   }
 
   editException() {
@@ -60,18 +60,18 @@ export class ExceptionDetailsComponent implements OnInit {
   }
 
   getAllComments() {
-    this.comments$ = this.commentService.getAllComments(this.exceptionId);
+    this.commentService.getAllComments(this.exceptionId).pipe(take(1)).subscribe(comments => {this.comments = comments;});
   }
 
   deleteException() {
-    const confirmModal = this.dialog.open(ConfirmationDialogComponent, {
+    const confirmModal = this.dialog.open(AlertDialogComponent, {
       width: '400px',
       closeOnNavigation: true,
       disableClose: true
     });
 
-    confirmModal.afterClosed().subscribe(result => {
-      if (result === undefined) {
+    confirmModal.afterClosed().pipe(take(1)).subscribe(result => {
+      if (result === true) {
         this.exceptionsService.deleteExceptionById(this.exceptionId).subscribe(
           _ => {
             this.router.navigate(['/private', 'exceptions']);
@@ -93,7 +93,6 @@ export class ExceptionDetailsComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(this.commentForm.value);
     this.isSubmitting = true;
     const currentUser = this.jwtAuthService.currentUser;
     const comment: IComment = {
@@ -101,10 +100,10 @@ export class ExceptionDetailsComponent implements OnInit {
       userId: currentUser.id,
       exceptionId: Number(this.exceptionId)
     };
-    this.commentService.createComment(comment).subscribe(data => {
+    this.commentService.createComment(comment).subscribe(() => {
       this.reset();
       this.getAllComments();
-    }, err => {
+    }, () => {
       this.alertService.warning('Something went wrong. Cannot post message');
     }, () => {
       this.isSubmitting = false;
@@ -127,7 +126,6 @@ export class ExceptionDetailsComponent implements OnInit {
     });
 
     deleteCommentDialog.afterClosed().subscribe(result => {
-      console.log(result);
       if (result) {
         this.getAllComments();
       }

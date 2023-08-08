@@ -2,7 +2,7 @@ import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {ExternalAuthConfigurationService} from '../../../../../core/services/external-auth-configuration.service';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {IAuthConfig, ILDAPConfigStrategy, IOAUTHConfigStrategy} from '../../../../../core/entities/IAuth';
 import {AuthenticationType} from '../../../../../core/enum/AuthenticationType';
 
@@ -21,14 +21,16 @@ export class ExternalAuthConfigurationCreateComponent implements OnInit {
   ldapAuthActivated = false;
   ldapPasswordHide = true;
 
-  constructor(private dialogRef: MatDialogRef<ExternalAuthConfigurationCreateComponent>,
-              private externalAuthConfigurationService: ExternalAuthConfigurationService,
-              private formBuilder: FormBuilder,
-              private alertService: AlertService,
-              @Inject(MAT_DIALOG_DATA) public data: {
-                isEdit: boolean;
-                authConfigData: IAuthConfig;
-              }) {
+  constructor(
+    private dialogRef: MatDialogRef<ExternalAuthConfigurationCreateComponent>,
+    private externalAuthConfigurationService: ExternalAuthConfigurationService,
+    private formBuilder: FormBuilder,
+    private alertService: AlertService,
+    @Inject(MAT_DIALOG_DATA) public data: {
+      isEdit: boolean;
+      authConfigData: IAuthConfig;
+    }
+  ) {
     this.authConfigForm = this.formBuilder.group({
       authType: ['', Validators.required],
       authName: ['', Validators.required],
@@ -149,14 +151,12 @@ export class ExternalAuthConfigurationCreateComponent implements OnInit {
 
     if (this.data.isEdit) {
       this.externalAuthConfigurationService.updateExternalAuth(authConfig, this.data.authConfigData.id).subscribe(data => {
-          console.log('Updating: ', data);
           this.dialogRef.close();
       }, error => {
           this.alertService.danger(error.error.message);
       });
     } else {
       this.externalAuthConfigurationService.createExternalAuth(authConfig).subscribe(data => {
-        console.log('Creating: ', data);
         this.dialogRef.close();
       }, error => {
         this.alertService.danger(error.error.message);

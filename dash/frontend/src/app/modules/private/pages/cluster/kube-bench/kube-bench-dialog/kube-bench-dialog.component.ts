@@ -3,7 +3,6 @@ import {IKubeBenchReport} from '../../../../../../core/entities/IKubeBenchReport
 import {FormBuilder} from '@angular/forms';
 import {KubeBenchService} from '../../../../../../core/services/kube-bench.service';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
-import {NgxUiLoaderService} from 'ngx-ui-loader';
 import {CommonService} from '../../../../../../core/services/common.service';
 import {take} from 'rxjs/operators';
 
@@ -15,8 +14,6 @@ import {take} from 'rxjs/operators';
 
 export class KubeBenchDialogComponent implements OnInit{
   selectedProvider = '';
-  allConfigs: string;
-  cliCommand: string;
   backendUrl: string;
   clusterId: number;
   report: IKubeBenchReport;
@@ -35,7 +32,6 @@ export class KubeBenchDialogComponent implements OnInit{
     @Inject(MAT_DIALOG_DATA) public data: { clusterId: number },
     private formBuilder: FormBuilder,
     private kubeBenchService: KubeBenchService,
-    private loaderService: NgxUiLoaderService,
     private commonService: CommonService,
   ) { }
 
@@ -62,22 +58,7 @@ export class KubeBenchDialogComponent implements OnInit{
       });
   }
 
-  // getConfigFileContents() {
-  //   this.kubeBenchService.getConfigFileContents(this.selected)
-  //     .pipe(take(1))
-  //     .subscribe(rtrn => {
-  //       const tempCLi = rtrn.data;
-  //       this.cliCommand = tempCLi.replace('{SITE URL HERE}', this.backendUrl).replace('{CLUSTER ID ETC HERE}', String(this.clusterId));
-  //     });
-  // }
-
-  /** Trims the '.yaml' off the end of filenames */
-  trimYamlExtension(input: string) {
-    return input.substring(0, input.length - 5);
-  }
-
   proceedToNext($event) {
-    console.log(this.selectedProvider);
     this.nextButtonDisabled = false;
   }
 }

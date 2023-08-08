@@ -1,117 +1,95 @@
-.mat-mdc-card{
-  padding: 0;
-  margin: 10px 10px 0 0;
+.row {
+  margin: 0.625em 0 0.625em 0;
 }
 
-.label {
-  padding-top: 10px;
-  font-weight: bold;
-  text-align: center;
-  font-size: 14px;
-  margin-top: -16px;
-}
-
-.total {
-  font-size: xx-large;
-  text-align: center;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
-.mat-mdc-card-title {
+mat-card-title {
   padding-top: 10px;
 }
 
-.cluster-element {
-  display: flex;
-  margin-top: 15px;
-}
+#cluster-summary-row {
+  mat-card {
+    margin: 10px 5px 0 5px;  // set to match legacy margins
+    height: 80%;
 
-.cluster-summary-card {
-  height: 80%;
-}
+    .label {
+      padding-top: 10px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 14px;
+      margin-top: -16px;
+    }
 
-.namespaces-table {
-  margin: 10px 0 10px 0;
-  width: calc(100% - 5px);
-  @media all and (min-width: 280px) and (max-width: 842px) {
-    width: calc(100% - 10px);
+    .total {
+      font-size: xx-large;
+      text-align: center;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
   }
 }
 
-.namespace-image-table {
-  overflow: auto;
-}
+#cluster-graphs-row {
+  mat-card {
+    margin: 10px 5px 0 5px;  // set to match legacy margins
 
-.namespace-image-table table {
-  max-width: 99%;
-  overflow: auto;
-}
+    mat-card-content {
+      margin: 6px 16px 16px 6px !important;
+      padding: unset;
+    }
+  }
 
-.search-results {
-  height: 180px;
-  overflow-x: hidden;
-  overflow-y: scroll;
-  flex: none;
-  table {
-    width: 100%;
+  ngx-charts-line-chart {
     font-size: 11px;
-    td {
-      font-size: 11px;
-      font-family: "Courier New";
-      cursor: pointer;
-    }
-    .cluster-error-event {
-      color: rgb(155,17,30);
-    }
-    .cluster-info-event {
-      color: rgb(0,15,137);
+  }
+}
+
+#cluster-vulnerability-table-row {
+  mat-card {
+    margin: 10px 5px 0 5px;  // set to match legacy margins
+    mat-table {
+      min-width: 500px;
+
+      .mat-column-namespace {
+        min-width: 120px;
+      }
     }
   }
 }
 
-.cluster-events-card {
-  // position: absolute;
-  width: 98.4%;
-  left: 1px;
-  bottom: 0;
-  padding: 15px 0 0 15px;
-}
-
-.cluster-events {
-  padding-top: 30px;
-  max-height: 50%;
-  padding-right: 0 !important;
-  padding-left: 3px !important;
+#cluster-events-row {
+  margin: 10px 5px 0 5px;  // set to match legacy margins
+  // top right bottom left
+  padding: 0 0 0 0;
+  height: 12em;
   position: sticky;
   position: -webkit-sticky; /* Safari */
   bottom: 0;
-  @media only screen and (min-width: 280px) and (max-width: 1024px) {
-    padding-top: 0;
+
+  mat-card {
+    padding: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
   }
-  width: calc(var(--cluster-container-width) - 10px);
 
-  margin: 0 0 0 10px;
-  height: 200px;
-  .mat-mdc-card:not([class*=mat-elevation-z]) {
+  #cluster-event-items {
+    max-height: 8em;  // smaller than the #cluster-events element to account for margins & header
+    overflow-x: hidden;
+    overflow-y: scroll;
+    flex: none;
 
-    // box-shadow: 0 -5px 5px -5px rgba(0,0,0,1);
+    table {
+      width: 100%;
+      font-size: 11px;
+      td {
+        font-size: 11px;
+        font-family: "Courier New", monospace;
+        cursor: pointer;
+      }
+      .cluster-error-event {
+        color: rgb(155,17,30);
+      }
+      .cluster-info-event {
+        color: rgb(0,15,137);
+      }
+    }
   }
-}
-
-.hide-scrollbar {
-  overflow: hidden !important;
-}
-
-.hide-x-scrollbar {
-  overflow-x: hidden !important;
-}
-
-.container-margin {
-  margin: 0 !important;
-}
-
-.graph-row {
-  margin-top: -22px;
-  margin-bottom: -10px;
 }

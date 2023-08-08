@@ -1,17 +1,12 @@
 import {Injectable} from '@nestjs/common';
 import {AdmissionReviewDto} from '../dto/admission-review.dto';
 import {AdmissionReviewReplyDto, AdmissionReviewReplyResponseStatus} from '../dto/admission-review-reply.dto';
-import {PolicyService} from '../../policy/services/policy-service';
 import {ImageService} from '../../image/services/image.service';
-import {ImageScanResultsIssueService} from '../../image-scan-results-issue/services/image-scan-results.service';
-import {ConfigService} from '@nestjs/config';
 import {V1Pod} from '@kubernetes/client-node/dist/gen/model/v1Pod';
 import {K8sImageService} from '../../k8s-image/services/k8s-image.service';
 import {ExceptionsService} from '../../exceptions/services/exceptions.service';
 import {ClusterService} from '../../cluster/services/cluster.service';
 import {ClusterDto} from '../../cluster/dto/cluster-dto';
-import {LicensingPortalService} from '../../../integrations/licensing-portal/licensing-portal.service';
-import {AppSettingsService} from '../../settings/services/app-settings.service';
 import { PodComplianceService } from '../../pod/services/pod-compliance.service';
 import { PodComplianceDto } from '../../pod/dto/pod-history-compliance-dto';
 import { ListOfImagesDto } from '../../image/dto/image-result.dto';
@@ -21,14 +16,9 @@ import {DockerRegistriesService} from '../../docker-registries/services/docker-r
 
 @Injectable()
 export class ClusterValidationService {
-    constructor(private readonly policyService: PolicyService,
-                private readonly imageService: ImageService,
-                private readonly imageScanResultsIssueService: ImageScanResultsIssueService,
-                private readonly configService: ConfigService,
+    constructor(private readonly imageService: ImageService,
                 private readonly exceptionService: ExceptionsService,
                 private readonly k8sImageService: K8sImageService,
-                private readonly licensingPortalService: LicensingPortalService,
-                private readonly appSettingsService: AppSettingsService,
                 private readonly clusterService: ClusterService,
                 private readonly podComplianceService: PodComplianceService,
                 private readonly dockerRegistriesService: DockerRegistriesService,
@@ -52,29 +42,11 @@ export class ClusterValidationService {
         response.apiVersion = validationRequest.apiVersion;
         response.kind = validationRequest.kind;
         response.response.uid = validationRequest.request.uid;
+        const namespace = validationRequest.request?.namespace;
 
         // get associated cluster and check whether enforcement is enabled
         const cluster: ClusterDto = await this.clusterService.getClusterById(clusterId);
 
-        // validate license and only enforce if license is valid
-        const checkLicenseValidity = await this.licensingPortalService.checkLicenseValidityFromDash();
-
-        // If enforcement isn't supported or enforced, skip validation
-        /*if (checkLicenseValidity.isLicenseSetup === false) {
-            // is license is not setup, let everything through, no need to validate the image.
-            response.response.allowed = true;
-            response.licenseStatusMessage = `${validationRequest.request.name} in ${validationRequest.request.namespace} was allowed without scanning because license was not setup.`;
-            return response;
-        } else if (!checkLicenseValidity.validity) { // its NO LONGER valid (it expired)
-            response.response.allowed = true;
-            response.licenseStatusMessage = `${validationRequest.request.name} in ${validationRequest.request.namespace} was allowed without scanning because license has been expired.`;
-            return response;
-        } else if (await this.appSettingsService.doesLicenseHaveImageScanningEnforcement() === false) {
-            response.response.allowed = true;
-            response.licenseStatusMessage = `${validationRequest.request.name} in ${validationRequest.request.namespace} was allowed without scanning because license does not have image scanning feature.`;
-            return response;
-        } else */
-        
         if (!cluster.isEnforcementEnabled) {
             response.response.allowed = true;
             response.enforcementMessage = 'Webhook Enforcement has been disabled. Thus Image Validation is being skipped.';
@@ -90,9 +62,10 @@ export class ClusterValidationService {
         // build request to calculate compliance
         const pod: V1Pod = validationRequest.request.object;
 
-        const listOfImages: ListOfImagesDto[] = [];
+        const imagesToCheckCompliance: ListOfImagesDto[] = [];
+        const unscannedImageNames: string[] = []
 
-        for (const container of pod.spec?.containers) {
+        for (const container of pod?.spec?.containers || []) {
             const imageInfo = this.k8sImageService.parseDockerImageUrl(container.image);
             // The parse docker image url sometimes puts the image name in the path and has the image name empty due to how it matches.
             // This will join them with a slash if both are defined, otherwise it will only use the non-empty one.
@@ -102,16 +75,31 @@ export class ClusterValidationService {
 
             const image = await this.findOrCreateImage(clusterId, imageInfo.host, imageName, imageInfo.tag);
 
-            if (image.isNew) {
-                allowed = false;
-                message = `Blocked by m9sweeper: pod contains an unscanned image: ${imageName}`;
-                response.response.status = new AdmissionReviewReplyResponseStatus();
-                response.response.status.message = message
-                response.response.allowed = allowed;
-                return response;
-            }
+            if (image.isNew || !image.image.lastScanned) {
+                // Gets the exceptions for the cluster & namespace that are not policy specific
+                const exceptions = await this.exceptionService.getAllFilteredPolicyExceptions(clusterId, undefined, namespace);
+                // Filter exceptions to only include ones that have a matching image name match, and are not for a specific scanner or CVE
+                const relevantExceptions = this.exceptionService.filterExceptionsByImageName(imageName, exceptions)
+                  .filter(ex => !ex.issueIdentifier && !ex.scannerId);
 
-            listOfImages.push(image.image);
+                // If the image is new, and has no applicable exceptions this will fail the container after we check for any other new images
+                if (!relevantExceptions?.length) {
+                    unscannedImageNames.push(imageName);
+                }
+            } else {
+                // If the image is not new, add it to the list of images to check compliance
+                imagesToCheckCompliance.push(image.image);
+            }
+        }
+
+        // Fail the validation due to having one or more unscanned images.
+        if (unscannedImageNames?.length) {
+            allowed = false;
+            message = `Blocked by m9sweeper: pod contains unscanned image(s): ${unscannedImageNames.join(', ')}`;
+            response.response.status = new AdmissionReviewReplyResponseStatus();
+            response.response.status.message = message
+            response.response.allowed = allowed;
+            return response;
         }
 
         const podComplianceDto: PodComplianceDto = Object.assign(new PodComplianceDto(), {
@@ -127,7 +115,7 @@ export class ClusterValidationService {
             clusterId: clusterId,
             podStatus: null, // not known
             savedDate: null, // not known
-            images: listOfImages
+            images: imagesToCheckCompliance
         });
 
         const complianceResult: PodComplianceResultDto =

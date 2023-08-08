@@ -1,10 +1,11 @@
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {Location} from '@angular/common';
 import {MatTableDataSource} from '@angular/material/table';
 import {MatSort} from '@angular/material/sort';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatDialog} from '@angular/material/dialog';
 import {ImageService} from '../../../../../core/services/image.service';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {IImage} from '../../../../../core/entities/IImage';
 import {IServerResponse} from '../../../../../core/entities/IServerResponse';
 import {CreateImageComponent} from '../create-image-form/create-image.component';
@@ -53,12 +54,16 @@ export class ImageComponent implements OnInit, AfterViewInit, OnDestroy {
     private dialog: MatDialog,
     private route: ActivatedRoute,
     private router: Router,
-    private jwtAuthService: JwtAuthService
+    private jwtAuthService: JwtAuthService,
+    private location: Location,
   ) {
-    this.cve = this.router.getCurrentNavigation().extras.state?.cve;
-    const running = this.router.getCurrentNavigation().extras.state?.onlyRunning;
-    this.onlyRunning = running !== 'NO';
-    this.imageName = this.router.getCurrentNavigation().extras.state?.imageName;
+    // .getCurrentNavigation() may return null due to a bug in Angular 15
+    // https://stackoverflow.com/questions/54891110/router-getcurrentnavigation-always-returns-null
+    // const currentNavigation = this.router.getCurrentNavigation();
+    const currentState: any = this.location.getState();
+    this.cve = currentState?.cve;
+    this.onlyRunning = currentState?.onlyRunning !== 'NO';
+    this.imageName = currentState?.imageName;
   }
 
   ngOnInit(): void {
@@ -159,7 +164,7 @@ export class ImageComponent implements OnInit, AfterViewInit, OnDestroy {
       disableClose: false,
       data: {images: this.dataSource.data},
     });
-    confirmScanAllDialog.afterClosed()
+    confirmScanAllDialog.afterClosed().pipe(take(1))
       .subscribe((result) => {
         if (result?.continue && result?.selectedImages) {
           this.scanImages(result.selectedImages);

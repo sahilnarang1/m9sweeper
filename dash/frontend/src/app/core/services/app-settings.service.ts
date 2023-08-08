@@ -28,11 +28,7 @@ export class AppSettingsService {
     return this.httpClient.get('/api/settings/site/title');
   }
 
-  getLicenseSettings(): Observable<IServerResponse<ISetting[]>> {
-    return this.httpClient.get('/api/settings/site/license/settings');
-  }
-
-  sendUpdatedSettingsData(data: any) {
+  setSettingsData(data: any) {
     this.updatedSettingsData.next(data);
   }
 

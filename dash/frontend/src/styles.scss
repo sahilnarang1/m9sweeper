@@ -10,39 +10,115 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 @import 'flexboxgrid/css/flexboxgrid.min.css';
 @import 'codemirror/lib/codemirror';
 @import 'codemirror/theme/material';
+@import 'generic-styles';
 
 //Default theme
 $ms-default-primary: mat.define-palette(mat.$indigo-palette, 800, 300, 900);
-$ms-default-accent: mat.define-palette(mat.$light-blue-palette);
+$ms-default-accent: mat.define-palette(mat.$light-blue-palette, 800, 300, 900);
 $ms-default-warn: mat.define-palette(mat.$pink-palette, 600);
-/*
-$ms-default-level: mat.define-typography-level(
+
+$ms-button-styling: mat.define-typography-level(
   $font-family: "Roboto, 'Helvetica Neue', sans-serif",
-  $font-weight: 400,
-  $font-size: 1rem,
-  $line-height: 1,
+  $font-weight: 600,
+  $font-size: 14px,
+  $line-height: 48px,
   $letter-spacing: normal,
 );
- */
+
 $ms-default-theme: mat.define-light-theme((
   color: (
     primary: $ms-default-primary,
     accent: $ms-default-accent,
     warn: $ms-default-warn
-  )
+  ),
+  typography: mat.define-typography-config(
+    $font-family: "Roboto, 'Helvetica Neue', sans-serif",
+    $button: $ms-button-styling,
+    $headline-5: mat.define-typography-level(24px, 32px, 400),
+    $headline-6: mat.define-typography-level(24px, 32px, 400),
+    $subtitle-1: mat.define-typography-level(24px, 20px, 400),
+    $body-1: mat.define-typography-level(14px, 20px, 400),
+    $body-2: mat.define-typography-level(14px, 20px, 400),
+    $subtitle-2: mat.define-typography-level(14px, 20px, 400),
+  ),
 ));
-
 
 //<app-root></app-root> theme
 @import "./app/app.component.theme";
 @import './app/modules/private/pages/dashboard/dashboard.component.theme';
 @import './app/modules/private/pages/cluster/cluster-details/cluster-details.component.theme';
-@import './app/modules/private/pages/cluster/cluster-list/cluster-list.component.theme';
 @import './app/modules/private/pages/organization-settings/organization-settings.component.theme';
-@import './app/modules/private/pages/cluster/cluster-summary/cluster-summary.component.theme';
 @import './app/modules/private/pages/audit-log/audit-log-list/audit-log.component.theme';
 
+mat-card {
+  mat-card-title {
+    font-weight: bold;
+  }
 
+  .mat-mdc-card-content {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.graph-card {
+  padding-bottom: 20px;
+  mat-card {
+    overflow: auto;
+  }
+}
+
+@mixin snackbar-theme($theme) {
+  $color-config: mat.get-color-config($theme);
+  $primary-palette: map-get($color-config, primary);
+  $success-palette: map-get($color-config, accent);
+  $warning-palette: map-get($color-config, warn);
+  $danger-palette: mat.define-palette(mat.$deep-orange-palette, 800, 300, 900);
+
+  .mat-mdc-snack-bar-container {
+    .mdc-snackbar__label, .mdc-button__label {
+      font-weight: normal;
+    }
+
+    &.info-alert {
+      .mdc-snackbar__surface {
+        background-color: map-get($primary-palette, "default") !important;
+        .mdc-snackbar__label, .mdc-button__label {
+          color: map-get($primary-palette, "default-contrast") !important;
+        }
+      }
+    }
+
+    &.success-alert {
+      .mdc-snackbar__surface {
+        background-color: map-get($success-palette, "default") !important;
+        .mdc-snackbar__label, .mdc-button__label {
+          color: map-get($success-palette, "default-contrast") !important;
+        }
+      }
+    }
+
+    &.warning-alert {
+      .mdc-snackbar__surface {
+        background-color: map-get($warning-palette, "default") !important;
+        .mdc-snackbar__label, .mdc-button__label {
+          color: map-get($warning-palette, "default-contrast") !important;
+          //text-transform: uppercase;
+        }
+      }
+    }
+
+    &.danger-alert {
+      .mdc-snackbar__surface {
+        background-color: map-get($danger-palette, "default") !important;
+        .mdc-snackbar__label, .mdc-button__label {
+          color: map-get($danger-palette, "default-contrast") !important;
+          //text-transform: uppercase;
+        }
+      }
+    }
+  }
+}
 
 @mixin custom-components-theme($theme) {
   @include app-root-theme($theme);
@@ -77,23 +153,20 @@ $ms-default-theme: mat.define-light-theme((
   @include custom-toolbar-light-theme($ms-default-theme);
   @include custom-organization-settings-light-theme($ms-default-theme);
   @include custom-audit-log-light-theme($ms-default-theme);
+  @include snackbar-theme($ms-default-theme);
+}
+
+button {
+  @include app-root-theme($ms-default-theme);
 }
 
 .mat-mdc-dialog-container .mdc-dialog__content {
   --mdc-dialog-supporting-text-color: rgba(0, 0, 0, 1);
 }
 
- .mat-mdc-dialog-container {
-  padding: 20px;
-  margin-left: 20px;
-
+.mat-mdc-dialog-container {
+  padding-block: 20px;
 }
-  // falco dialog height
-  mat-mdc-dialog-container, .mat-mdc-dialog-container .mdc-dialog__container, .mat-mdc-dialog-container .mdc-dialog__surface {
-    height: fit-content;
-   // overflow-y: auto;
-  }
-
 
 // organization menu text
 .organization-settings-text {
@@ -112,8 +185,8 @@ $ms-default-theme: mat.define-light-theme((
   }
 }
 
-.no-padding{
-  padding: 0;
+.no-padding {
+  padding: 0!important;
 }
 
 .margin-top-10{
@@ -125,7 +198,7 @@ $ms-default-theme: mat.define-light-theme((
 }
 .padding-top-15 {
   padding-top:15px;
-  padding-left: 0px;
+  padding-left: 0;
 }
 .padding-left-3 {
   padding-left: 3%;
@@ -137,6 +210,10 @@ $ms-default-theme: mat.define-light-theme((
 
 .margin-right-10{
   margin-right: 10px;
+}
+
+.text-align-center {
+  text-align: center;
 }
 
 .text-align-right{
@@ -167,6 +244,10 @@ $ms-default-theme: mat.define-light-theme((
   justify-content: center;
 }
 
+.justify-content-right {
+  justify-content: right!important;
+}
+
 .margin-bottom-6{
   margin-bottom: 6px;
 }
@@ -184,7 +265,7 @@ $ms-default-theme: mat.define-light-theme((
 
 .table-format td, .table-format th {
   border: 1px #AAA solid ;
-  margin: 0px;
+  margin: 0;
   padding: 2px;
   border-collapse: collapse;
   vertical-align: baseline;
@@ -210,16 +291,16 @@ app-private {
 .main-content {
   flex: 1;
   height: auto;
-  margin-top: 0px !important
+  margin-top: 0 !important
 }
 
 // Org setting pages uses app-sub-navigation for titles and buttons
 // The following are for lining up other page elements
-.mat-mdc-card-header{
-  display: flex;
-  padding: 0;
-  margin-left: 0px;
-}
+//.mat-mdc-card-header{
+//  display: flex;
+//  padding: 0;
+//  margin-left: 0;
+//}
 .page-container {
   height: 100%;
   display: block;
@@ -232,19 +313,38 @@ app-private {
   margin: 20px;
   // width:fit-content;
 }
-.page-card{
-  margin: 0px;
+
+.settings-card, .scrollable-table-card, .component-with-scrollable-table {
+  div.table-wrapper {
+    overflow-x: auto;
+    display: flex;
+  }
+  th, mat-header-cell {
+    font-weight: 550 !important;
+  }
+  mat-table {
+    display: table;
+  }
+  mat-cell {
+    touch-action: auto !important;
+    -webkit-user-drag: auto !important;
+  }
+}
+
+.page-card {
+  margin: 0;
   overflow-x: auto;
 }
 .page-card-header{
   display:flex;
-  padding:0px;
-  margin-left: 0px;
+  padding:0;
+  margin-left: 0;
   width: 100%;
 }
 .page-card-title{
   font-size: 20px;
   font-weight: bold;
+  line-height: 1.5em;
 }
 .page-card-content{
   margin-bottom: 30px;
@@ -254,10 +354,10 @@ app-private {
 }
 .page-card-title-button-group-right-align{
   text-align: right;
-  padding:0px;
+  padding: 0;
 }
 .page-card-left-align {
-  margin-left: 0px;
+  margin-left: 0;
 }
 .page-table-container-with-paginator{
   width: fit-content; // align paginator with table width
@@ -281,11 +381,10 @@ app-private {
 .page-title{
   font-size: 26px;
   vertical-align: bottom;
-  line-height: 1;
+  line-height: 2;
 }
-.page-title-button-group-spacing{
+.page-title-button-group-spacing {
   display: flex;
-  height: 60px;
   justify-content: space-between;
   flex-direction: row;
 }
@@ -299,17 +398,15 @@ app-private {
   padding: 30px;
 }
 .modal-content-left-align-no-margin{
-  margin: 0px;
+  margin: 0;
   text-align: left;
 }
-.modal-content-no-right-margin{
-  margin-right: 0px;
+.modal-content-right-align-no-margin{
+  margin: 0;
+  text-align: right;
 }
-
-.cluster-card {
-  height: 100%;
-  margin-top: 5px;
-  margin-bottom: 30px;
+.modal-content-no-right-margin{
+  margin-right: 0;
 }
 
 .table-row {
@@ -320,11 +417,6 @@ app-private {
   &.mark {
     background: rgba(0, 0, 0, .05);
   }
-}
-
-.cluster-page-row {
-  padding-left: 30px;
-  padding-right: 20px;
 }
 
 .pointer {
@@ -377,38 +469,21 @@ mat-form-field {
   // flex: 1;
   overflow: auto;
   background: #F9F9F9;
-  /* TODO(mdc-migration): The following rule targets internal classes of tabs that may no longer apply for the MDC version.*/
+
   mat-table {
     min-width: 800px;
+
+    mat-row {
+      height: unset !important;  // overrides the height imposition set by the generic data table template
+    }
 
     mat-cell, mat-header-cell, mat-footer-cell {
       overflow: visible;
       word-break: break-word;
       overflow-wrap: break-word;
-      padding-right: 5px;
-    }
-
-    & .mat-column-date {
-      width: 150px;
-      max-width: 150px;
-    }
-
-    & .mat-column-runningCluster {
-      width: 120px;
-      max-width: 120px;
-      text-align: center;
-    }
-
-    & .mat-column-scanResult {
-      width: 100px;
-      max-width: 100px;
-      text-align: center;
-    }
-
-    & .mat-column-Crt, & .mat-column-Maj, & .mat-column-Med, & .mat-column-Min, & .mat-column-Neg {
-      width: 50px;
-      max-width: 50px;
-      text-align: center;
+      padding-left: 10px;
+      padding-right: 10px;
+      margin-right: unset;
     }
   }
 }
@@ -522,6 +597,7 @@ mat-form-field {
   justify-content: right;
   padding-right: 15px;
   align-content: center;
+  align-items: center;
 }
 
 .vulnerability-count {
@@ -532,52 +608,8 @@ mat-form-field {
 }
 
 .vulnerability-card {
-  min-width: 800px;
+  min-width: 300px;
   padding-bottom: 20px;
-}
-
-.mat-column-imageId {
-  margin-right: 10px;
-  word-break: break-all;
-  max-width: 7%;
-}
-
-.mat-column-image {
-  word-break: break-all;
-  margin-right: 10px
-}
-
-.mat-column-type {
-  word-break: break-all;
-  margin-right: 10px;
-}
-
-.mat-column-package {
-  word-break: break-all;
-  margin-right: 10px;
-}
-
-.mat-column-isFixable {
-  max-width: 7%;
-  margin-right: 10px;
-}
-
-.mat-column-severity {
-  max-width: 7%;
-}
-
-.mat-column-scannerName {
-  margin-right: 10px;
-}
-
-.mat-column-runningInCluster {
-  max-width: 7%;
-  margin-right: 10px;
-}
-
-.mat-column-namespaces {
-  margin-right: 10px;
-  word-break: break-all;
 }
 
 .mat-mdc-form-field {
@@ -586,11 +618,6 @@ mat-form-field {
 
 .fix-margin {
   margin-left: 18px;
-}
-
-.graph-card {
-  min-width: 625px;
-  padding-bottom: 20px;
 }
 
 // CSS for Report pages [END]
@@ -639,21 +666,11 @@ span.cluster-group-name-full {
   padding-left: 10px;
   vertical-align: text-bottom;
 }
-span.cluster-group-name-short {
-  width: 15px;
-  height: 60px;
-  padding:15px;
-  text-align: center;
-  color: white;
-  text-transform: uppercase;
-  font-size: 10px;
-  vertical-align: text-bottom;
-  margin: 4px;
-}
 
 div.cluster-group-name {
   text-decoration: none;
-  font-size: 14px;
+  font-size: 26px;
+  line-height: 2.5;
 }
 div.organization-settings { // left nav 3)
   flex-direction: row;
@@ -675,7 +692,7 @@ div.collapse-item {
   }
 }
 div.cluster-dashboard {
-  width: calc(100% - 300px);
+  //width: calc(100% - 300px);
   flex-direction: column;
   background-color: #e0e0e0;
 }
@@ -716,7 +733,7 @@ div.cluster-group-menu.responsive {
   }
 }
 div.cluster-dashboard.responsive {
-  width: calc(100% - 65px);
+  //width: calc(100% - 65px);
   flex-direction: column;
 }
 
@@ -727,7 +744,11 @@ div.cluster-dashboard.responsive {
 }
 
 .display-flex {
-  display: flex;
+  display: flex !important;
+}
+
+.flex-column {
+  flex-direction: column;
 }
 
 .action-button-row {
@@ -737,8 +758,12 @@ div.cluster-dashboard.responsive {
   margin-right: 5px;
 }
 
+.light-border {
+  border: rgba(0, 0, 0, 0.12) solid 1px;
+}
+
 .padding-10 {
-  padding: 10px;
+  padding: 10px!important;
 }
 
 .padding-top-4 {
@@ -749,3 +774,76 @@ div.cluster-dashboard.responsive {
   padding-left: 10px;
 }
 
+.w-100 {
+  width: 100%;
+}
+
+.h-100 {
+  height: 100%;
+}
+
+.align-items-center {
+  align-items: center!important;
+}
+.align-self-center {
+  align-self: center !important;
+}
+
+.align-items-stretch {
+  align-items: stretch;
+}
+
+/** Hides the increment/decrement arrows on number inputs */
+input[type=number].no-spin-button {
+  -moz-appearance:textfield; /* Firefox */
+
+  ::-webkit-outer-spin-button,
+  ::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    // Gets rid of the margin on the (invisible) arrows
+    margin: 0;
+  }
+}
+
+app-datepicker-component {
+  margin-left: 20px;
+}
+
+.mt-half-rem {
+  margin-top: 0.5rem;
+}
+
+.mb-half-rem {
+  margin-bottom: 0.5rem;
+}
+
+.mb-1-rem {
+  margin-bottom: 1rem;
+}
+
+.my-0 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.min-width-8 {
+  min-width: 8rem;
+}
+
+.min-width-4 {
+  min-width: 4rem;
+}
+
+.min-width-3 {
+  min-width: 3rem;
+}
+
+.height-30 {
+  height: 30rem;
+}
+
+.ngx-charts .bar,
+.ngx-charts .bar,
+.ngx-charts .circle {
+  cursor: default !important; // disable ngx-chart's default behavior of changing the cursor to a pointer on hover
+}

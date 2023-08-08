@@ -14,6 +14,7 @@ div {
     }
   }
 }
+
 div.kubernetes-object-container {
   height:calc(var(--cluster-details-height) - 52px);
   overflow: auto;
@@ -41,9 +42,6 @@ div.kubernetes-object-container {
     }
     * > mat-cell:first-of-type {
       padding-left: 0;
-    }
-    * > .mat-mdc-table .mat-mdc-paginator {
-      width: 250px;
     }
   }
 

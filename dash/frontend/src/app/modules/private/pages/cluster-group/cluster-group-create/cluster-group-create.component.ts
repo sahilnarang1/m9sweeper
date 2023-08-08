@@ -1,10 +1,11 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
-import { AlertService } from '@full-fledged/alerts';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { JwtAuthService } from '../../../../../core/services/jwt-auth.service';
 import { ClusterGroupService } from '../../../../../core/services/cluster-group.service';
 import { CustomValidators } from '../../../form-validator/custom-validators';
+import {take} from 'rxjs/operators';
 
 
 @Component({
@@ -41,31 +42,38 @@ export class ClusterGroupCreateComponent implements OnInit {
     const formData = this.clusterGroupCreateForm.getRawValue();
     formData.name = formData.name.trim();
     if (this.data.isEdit) {
-      this.clusterGroupService.updateClusterGroup(formData, this.data.clusterGroupId).subscribe(response => {
-        console.log('cluster group update response=>', response);
-        if (response?.data) {
-          this.successMsg = 'Cluster group updated successfully';
-          this.alertService.success('Cluster group updated successfully');
-          this.clusterGroupService.setCurrentGroup({name: formData.name.trim(), groupId: this.data.clusterGroupId });
-          this.dialogRef.close();
-        }
-      }, error => {
-        this.errorMsg = error?.data?.message;
-        this.alertService.danger(error.error.message);
-      });
+      this.clusterGroupService.updateClusterGroup(formData, this.data.clusterGroupId).pipe(take(1))
+        .subscribe({
+          next: response => {
+            if (response?.data) {
+              this.successMsg = 'Cluster group updated successfully';
+              this.alertService.success('Cluster group updated successfully');
+              this.clusterGroupService.setCurrentGroup({name: formData.name.trim(), groupId: this.data.clusterGroupId });
+              this.dialogRef.close(true);
+            }
+          },
+          error: error => {
+            this.errorMsg = error?.data?.message;
+            this.alertService.danger(error.error.message);
+          }
+        });
     }
      else {
-      this.clusterGroupService.createClusterGroup(formData).subscribe(isCreated => {
-        console.log('cluster group created response=>', isCreated);
-        if (+isCreated?.data?.id > 0 ) {
-          this.successMsg = 'Cluster group created successfully';
-          this.alertService.success('Cluster group created successfully');
-          this.dialogRef.close();
-        }
-      }, error => {
-        this.errorMsg = error?.data?.message;
-        this.alertService.danger(error.error.message);
-      });
+      this.clusterGroupService.createClusterGroup(formData)
+        .pipe(take(1))
+        .subscribe({
+          next: isCreated => {
+            if (+isCreated?.data?.id > 0 ) {
+              this.successMsg = 'Cluster group created successfully';
+              this.alertService.success('Cluster group created successfully');
+              this.dialogRef.close(true);
+            }
+          },
+          error: error => {
+            this.errorMsg = error?.data?.message;
+            this.alertService.danger(error.error.message);
+          }
+        });
     }
 
   }

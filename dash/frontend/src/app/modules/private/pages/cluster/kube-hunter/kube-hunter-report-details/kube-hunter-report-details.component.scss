@@ -1,29 +1,31 @@
-mat-table {
-  min-width: 500px;
+.page-title {
+  line-height: 1.5;
 }
 
-.column-severity {
-  padding-right: 1%;
-  flex: 4%;
-}
+mat-card {
+  margin: 1em 0;
+  mat-table {
+    margin-bottom: 0.5em;
+  }
 
-.column-category {
-  padding: 0 1%;
-  flex: 13%;
-}
+  .mat-column-severity {
+    min-width: 100px;
+  }
 
-.column-vulnerability {
-  padding-right: 1%;
-  flex: 24%;
-}
+  .mat-column-category {
+    min-width: 300px;
+  }
 
-.column-description {
-  padding-right: 1%;
-  flex: 34%;
-}
+  .mat-column-vulnerability {
+    min-width: 200px;
+  }
 
-.column-additionalInfo {
-  padding-right: 1%;
-  flex: 19%;
-}
+  .mat-column-description {
+    min-width: 400px;
+  }
 
+  .mat-column-additionalInfo {
+    min-width: 400px;
+  }
+
+}

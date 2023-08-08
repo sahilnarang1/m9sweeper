@@ -5,9 +5,8 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {IServerResponse} from '../../../../../core/entities/IServerResponse';
 import {IPod} from '../../../../../core/entities/IPod';
 import {MatTableDataSource} from '@angular/material/table';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {PodService} from '../../../../../core/services/pod.service';
-import {FormatDate} from '../../../../shared/format-date/format-date';
 import {ImageIssueMoreDataDialogComponent} from '../../image/image-issue-more-data-dialog/image-issue-more-data-dialog.component';
 import {MatDialog, MatDialogRef} from '@angular/material/dialog';
 
@@ -28,16 +27,15 @@ export class KubernetesPodsComponent implements OnInit {
   namespace: null;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
   @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-  formatDate = FormatDate;
-  initialDate = new Date();
   totalNumPods: number;
   limit = this.getLimitFromLocalStorage() ? Number(this.getLimitFromLocalStorage()) : 10;
   page = 0;
+  pageLoading = true;
 
   constructor(
     private route: ActivatedRoute,
     private alertService: AlertService,
-    private  podService: PodService,
+    private podService: PodService,
     private router: Router,
     private dialog: MatDialog,
   ) {}
@@ -62,6 +60,7 @@ export class KubernetesPodsComponent implements OnInit {
   }
 
   loadCurrentPods() {
+    this.pageLoading = true;
     this.podService.getNumOfCurrentPods(this.clusterId, this.namespace)
       .subscribe(
         (response: IServerResponse<string>) => this.handleGetCountSuccessResponse(response),
@@ -75,6 +74,7 @@ export class KubernetesPodsComponent implements OnInit {
   }
 
   loadHistoricalPods(startTime: number, endTime: number) {
+    this.pageLoading = true;
     this.podService.getNumOfPodsBySelectedDate(
       this.clusterId, this.namespace,
       startTime, endTime,
@@ -93,6 +93,7 @@ export class KubernetesPodsComponent implements OnInit {
   }
 
   handleGetCountSuccessResponse(response: IServerResponse<string>) {
+    this.pageLoading = false;
     if (response.data) {
       this.totalNumPods = parseInt(response.data, 10);
     } else {
@@ -100,6 +101,7 @@ export class KubernetesPodsComponent implements OnInit {
     }
   }
   handleGetCountErrorResponse(error) {
+    this.pageLoading = false;
     try {
       this.totalNumPods = parseInt(error.data, 10);
     } catch (e) {
@@ -108,6 +110,7 @@ export class KubernetesPodsComponent implements OnInit {
   }
 
   handleGetPodsSuccessResponse(response: IServerResponse<IPod[]>) {
+    this.pageLoading = false;
     if (response.data) {
       this.dataSource = new MatTableDataSource(response.data);
       this.dataSource.sort = this.sort;
@@ -119,6 +122,7 @@ export class KubernetesPodsComponent implements OnInit {
     }
   }
   handleGetPodsErrorResponse(error) {
+    this.pageLoading = false;
     try {
       this.dataSource = new MatTableDataSource(error.data);
     } catch (e) {
@@ -127,14 +131,6 @@ export class KubernetesPodsComponent implements OnInit {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
     this.alertService.danger(error.error.message);
-  }
-
-  getPodDetails(row: IPod) {
-    this.router.navigate(['/private', 'clusters', this.clusterId, 'kubernetes-namespaces', this.namespace, 'pods', row?.name]);
-  }
-
-  routePages(url: any) {
-    this.router.navigate(url);
   }
 
   // @TODO: server side pagination
@@ -151,14 +147,9 @@ export class KubernetesPodsComponent implements OnInit {
       extraData: [],
     };
     issue.extraData = element.violations;
-    this.dialogRef = this.dialog.open(ImageIssueMoreDataDialogComponent, {
+    this.dialog.open(ImageIssueMoreDataDialogComponent, {
       width: 'auto',
       data: {issue}
     });
-
-    this.dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
-    });
   }
-
 }

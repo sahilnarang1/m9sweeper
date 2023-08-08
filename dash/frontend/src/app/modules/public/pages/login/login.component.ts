@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../../../core/services/api/auth.service';
 import { IAuthenticationMethod } from '../../../../core/entities/IAuthenticationMethod';
-import { AlertService } from '@full-fledged/alerts';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { MatSelectChange } from '@angular/material/select';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { IServerResponse } from '../../../../core/entities/IServerResponse';
@@ -9,6 +9,7 @@ import { IAuth } from '../../../../core/entities/IAuth';
 import { JwtAuthService } from '../../../../core/services/jwt-auth.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
+import {take} from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -45,7 +46,6 @@ export class LoginComponent implements OnInit {
     });
     this.authService.getAvailableAuthenticationMethods().subscribe((response: IServerResponse<IAuthenticationMethod[]>) => {
       const authenticationMethods = response.data;
-      console.log('authenticationMethods: ', authenticationMethods);
       this.inSiteCredentialAuthenticationMethods = authenticationMethods;
       this.selectedInSiteCredentialAuthenticationMethod = this.inSiteCredentialAuthenticationMethods.find(iscam => iscam.type === 'LOCAL_AUTH');
     }, error => {
@@ -71,13 +71,12 @@ export class LoginComponent implements OnInit {
     if (this.loginForm.invalid) {
       return;
     }
-    console.log('this.selectedInSiteCredentialAuthenticationMethod: ', this.selectedInSiteCredentialAuthenticationMethod);
     this.loaderService.start('login');
     this.authService.login(
       this.loginForm.value.username,
       this.loginForm.value.password,
       this.selectedInSiteCredentialAuthenticationMethod
-    ).subscribe((response: IServerResponse<IAuth>) => {
+    ).pipe(take(1)).subscribe((response: IServerResponse<IAuth>) => {
       this.alertService.success('Login successful');
       const token: string = response.data.accessToken;
       if (token !== null && token.trim() !== '') {
@@ -85,10 +84,8 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/private']).then(() => this.loaderService.stop('login'));
       } else {
         this.loaderService.stop('login');
-        console.log('Invalid JWT');
       }
     }, error => {
-      console.log('Error: ', error);
       this.loaderService.stop('login');
       this.alertService.danger(error.error.message);
     });

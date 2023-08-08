@@ -8,7 +8,9 @@ import com.amazonaws.services.ecr.AmazonECR;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenResult;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.m9sweeper.trawler.TrawlerConfiguration;
 import io.m9sweeper.trawler.framework.docker.DockerRegistry;
 import io.m9sweeper.trawler.framework.scans.*;
@@ -92,8 +94,8 @@ public class Trivy implements Scanner {
                 String decodedString = new String(decodedBytes);
                 String authToken = decodedString.substring(4); // skip AWS: at the start of the string
 
-                trivyScanCommandBuilder.append("export TRIVY_USERNAME='").append(escapeXsi("AWS")).append("'; ");
-                trivyScanCommandBuilder.append("export TRIVY_PASSWORD='").append(escapeXsi(authToken)).append("'; ");
+                trivyScanCommandBuilder.append("export TRIVY_USERNAME=").append(escapeXsi("AWS")).append("; ");
+                trivyScanCommandBuilder.append("export TRIVY_PASSWORD=").append(escapeXsi(authToken)).append("; ");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -116,7 +118,7 @@ public class Trivy implements Scanner {
             gcrAuthFile.deleteOnExit();
 
             // Export the location of this file so that Trivy can utilize it
-            trivyScanCommandBuilder.append("export GOOGLE_APPLICATION_CREDENTIALS='").append(gcrAuthFile.getAbsolutePath()).append("'; ");
+            trivyScanCommandBuilder.append("export GOOGLE_APPLICATION_CREDENTIALS=").append(gcrAuthFile.getAbsolutePath()).append("; ");
         } else if ("AZCR".equals(registry.getAuthType())) {
             // Azure Container Registry images are accessed with a service principal set up beforehand. Trawler only needs to
             // export the Client ID, Secret, and Tenant ID of the service principal to allow Trivy to connect to it
@@ -126,12 +128,12 @@ public class Trivy implements Scanner {
             String clientSecret = authDetails.getOrDefault("azureClientSecret", "").toString();
             String tenantId = authDetails.getOrDefault("azureTenantId", "").toString();
 
-            trivyScanCommandBuilder.append("export AZURE_CLIENT_ID='").append(escapeXsi(clientId)).append("'; ");
-            trivyScanCommandBuilder.append("export AZURE_CLIENT_SECRET='").append(escapeXsi(clientSecret)).append("'; ");
-            trivyScanCommandBuilder.append("export AZURE_TENANT_ID='").append(escapeXsi(tenantId)).append("'; ");
+            trivyScanCommandBuilder.append("export AZURE_CLIENT_ID=").append(escapeXsi(clientId)).append("; ");
+            trivyScanCommandBuilder.append("export AZURE_CLIENT_SECRET=").append(escapeXsi(clientSecret)).append("; ");
+            trivyScanCommandBuilder.append("export AZURE_TENANT_ID=").append(escapeXsi(tenantId)).append("; ");
         } else if (registry.getIsLoginRequired()) {
-            trivyScanCommandBuilder.append("export TRIVY_USERNAME='").append(escapeXsi(registry.getUsername())).append("'; ");
-            trivyScanCommandBuilder.append("export TRIVY_PASSWORD='").append(escapeXsi(registry.getPassword())).append("'; ");
+            trivyScanCommandBuilder.append("export TRIVY_USERNAME=").append(escapeXsi(registry.getUsername())).append("; ");
+            trivyScanCommandBuilder.append("export TRIVY_PASSWORD=").append(escapeXsi(registry.getPassword())).append("; ");
         }
 
         // Clear Trivy cache

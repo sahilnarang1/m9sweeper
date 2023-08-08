@@ -1,7 +1,7 @@
 import {Component, OnInit, ViewChild, AfterViewInit} from '@angular/core';
 import {MatSort} from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {IServerResponse} from '../../../../../core/entities/IServerResponse';
 import {ApiKeyService} from '../../../../../core/services/api-key.service';
 import {IApiKey} from '../../../../../core/entities/IApiKey';
@@ -10,16 +10,18 @@ import {MatPaginator} from '@angular/material/paginator';
 import {AlertDialogComponent} from '../../../../shared/alert-dialog/alert-dialog.component';
 import {merge} from 'rxjs';
 import {ActivatedRoute} from '@angular/router';
+import {JwtAuthService} from '../../../../../core/services/jwt-auth.service';
+import {take} from 'rxjs/operators';
 
 @Component({
   selector: 'app-api-key-list',
   templateUrl: './api-key-list.component.html',
   styleUrls: ['./api-key-list.component.scss']
 })
-
 export class ApiKeyListComponent implements OnInit, AfterViewInit {
   subMenuTitle = 'API Key Management';
-  displayedColumns: string[] = ['name', 'api', 'username', 'isActive', 'actions'];
+  displayedColumns: string[] = ['name', 'api', 'username', 'isActive', 'edit', 'delete'];
+  displayedColumnsNonAdmin: string[] = ['name', 'api', 'username', 'isActive'];
   dataSource: MatTableDataSource<IApiKey>;
   @ViewChild(MatSort) sort: MatSort;
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -30,13 +32,20 @@ export class ApiKeyListComponent implements OnInit, AfterViewInit {
   page = 0;
   totalCount = 0;
   data: IApiKey[] = [];
+  isAdmin: boolean;
 
   constructor(
+    private jwtAuthService: JwtAuthService,
     private apiKeyService: ApiKeyService,
     private dialog: MatDialog,
     private alertService: AlertService,
     private route: ActivatedRoute
-  ) {}
+  ) {
+    this.isAdmin = this.jwtAuthService.isAdmin();
+    if (!this.isAdmin) {
+      this.displayedColumns = this.displayedColumnsNonAdmin;
+    }
+  }
 
   ngOnInit(): void {
     this.subNavigationTitle = 'API Key Management';
@@ -79,7 +88,7 @@ export class ApiKeyListComponent implements OnInit, AfterViewInit {
       }
     });
 
-    openDeleteApiKey.afterClosed().subscribe(result => {
+    openDeleteApiKey.afterClosed().pipe(take(1)).subscribe(result => {
       if (result) {
         this.pageEvent({pageSize: this.limit, pageIndex: (this.data.length > 1) ? this.page : 0});
       }

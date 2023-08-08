@@ -2,15 +2,13 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {Subject} from 'rxjs';
 import {take, tap} from 'rxjs/operators';
 import {KubeHunterService} from '../../../../../core/services/kube-hunter.service';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {IKubeHunterReport} from '../../../../../core/entities/IKubeHunterReport';
 import {ActivatedRoute, Router} from '@angular/router';
 import {MatTableDataSource} from '@angular/material/table';
 import {MatDialog} from '@angular/material/dialog';
 import {KubeHunterDialogComponent} from './kube-hunter-dialog/kube-hunter-dialog.component';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
-import {IServerResponse} from '../../../../../core/entities/IServerResponse';
-import {IImage} from '../../../../../core/entities/IImage';
 
 @Component({
   selector: 'app-kube-hunter',
@@ -26,12 +24,16 @@ export class KubeHunterComponent implements OnInit, OnDestroy {
   scansExist = false;
   mostRecentVulnerabilities = {low: 0, medium: 0, high: 0};
 
+  penetrationTestStatusInvalid: boolean;
+  penetrationTestText: string;
+
   displayedColumns: string[] = ['date', 'time', 'numVulnerabilities'];
   dataSource: MatTableDataSource<any>;
 
   reportCount = 0;
   limit = this.getLimitFromLocalStorage() ? Number(this.getLimitFromLocalStorage()) : 20;
   page = 0;
+  ourAdvice: string;
 
   constructor(
     private kubeHunterService: KubeHunterService,
@@ -40,8 +42,7 @@ export class KubeHunterComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private router: Router,
     private loaderService: NgxUiLoaderService,
-  ) {
-  }
+  ) {}
 
   ngOnInit(): void {
     this.route.parent.params.pipe(take(1)).subscribe(param => this.clusterId = param.id);
@@ -73,6 +74,19 @@ export class KubeHunterComponent implements OnInit, OnDestroy {
           this.allReportsForCluster = res.list;
           if (res.list[0] != null){
             this.daysPassed = Math.floor((Date.now() - res.list[0].createdAt) / (1000 * 60 * 60 * 24));
+            if (this.daysPassed >= 90) {
+              this.ourAdvice = 'It has been ' + this.daysPassed + ' days since you ran kube-hunter. You should run it again soon.';
+              this.penetrationTestStatusInvalid = true;
+              this.penetrationTestText = 'Report Outdated';
+            } else if (this.daysPassed >= 10) {
+              this.ourAdvice = 'It has been ' + this.daysPassed + ' days since you last ran kube-hunter.';
+              this.penetrationTestStatusInvalid = true;
+              this.penetrationTestText = 'Report Outdated';
+            } else {
+              this.ourAdvice = 'It has been ' + this.daysPassed + ' days since you last ran kube-hunter.';
+              this.penetrationTestStatusInvalid = false;
+              this.penetrationTestText = 'Report Valid';
+            }
             res.list[0].vulnerabilities?.value?.value?.forEach( vulnerability => {
               if (vulnerability.severity === 'low') {
                 this.mostRecentVulnerabilities.low += 1;
@@ -86,8 +100,13 @@ export class KubeHunterComponent implements OnInit, OnDestroy {
           this.reportCount = res.reportCount;
           this.populateTable();
         }
-      }, () => {},
-        () => this.loaderService.stop());
+      }, (e) => {
+        if (e.status === 404) {
+          this.ourAdvice = 'Run kube-hunter to find vulnerabilities within your cluster.';
+          this.penetrationTestText = 'Unknown';
+        }
+      },
+      () => this.loaderService.stop());
   }
 
   populateTable() {

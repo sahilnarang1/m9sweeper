@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AlertService } from '@full-fledged/alerts';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { UserService } from '../../../../../core/services/user.service';
 import {JwtAuthService} from '../../../../../core/services/jwt-auth.service';
 import {IServerResponse} from '../../../../../core/entities/IServerResponse';
@@ -25,7 +25,6 @@ export class CreateUserComponent implements OnInit {
   authorities: IAuthority[];
   defaultAuthority: Array<number>;
   activateReadOly = false;
-  hidePassword = true;
   authType: string;
 
   constructor(
@@ -44,7 +43,6 @@ export class CreateUserComponent implements OnInit {
       firstName: ['', [Validators.required, Validators.maxLength(100)]],
       lastName: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
-      password: ['', Validators.nullValidator],
       phone: ['', Validators.pattern(/^(\+|\d)[0-9]{6,20}$/)],
       isActive: [true, Validators.nullValidator],
       authorities: ['', [Validators.required]]
@@ -93,14 +91,6 @@ export class CreateUserComponent implements OnInit {
     });
   }
 
-  // async onFileChange(event) {
-  //   this.selectedFile = event.target.files[0];
-  //   console.log(this.selectedFile);
-  //   const data = await this.toBase64(this.selectedFile);
-  //   this.selectedFileTo64base = data;
-  //   this.selectedFileType = this.selectedFile.type;
-  // }
-
   cancel() {
     this.location.back();
   }
@@ -109,7 +99,6 @@ export class CreateUserComponent implements OnInit {
       const userCreatePayload: IUserRequestPayload = {
           authorities: this.userForm.get('authorities').value,
           email: this.userForm.get('email').value,
-          password: this.userForm.get('password').value,
           firstName: this.userForm.get('firstName').value,
           lastName: this.userForm.get('lastName').value,
           phone: this.userForm.get('phone').value,
@@ -125,16 +114,13 @@ export class CreateUserComponent implements OnInit {
       const userCreatePayload: IUserRequestPayload = {
         authorities: this.userForm.get('authorities').value,
         email: this.userProfileData.email,
-        password: this.userForm.get('password').value,
         firstName: this.userForm.get('firstName').value,
         lastName: this.userForm.get('lastName').value,
         phone: this.userForm.get('phone').value,
         isActive: this.userForm.get('isActive').value,
       };
-      // if user did not add a password, do not send it to the backend
-      if (!userCreatePayload.password || userCreatePayload.password.trim() === '') {
-        delete userCreatePayload.password;
-      }
+      // ensure no password is sent to the backend
+      delete userCreatePayload.password;
       this.userService.updateUserInfo(
         this.userProfileData.id,
         userCreatePayload
@@ -146,47 +132,5 @@ export class CreateUserComponent implements OnInit {
         this.alertService.danger(event.error.message);
       });
     }
-    // this.loaderService.start();
-    // if (this.userId) {
-    //   this.userService
-    //     .updateUserInfo(+this.userId, {...this.userForm.value, logo: this.selectedFileTo64base, logo_type: this.selectedFileType})
-    //     .subscribe((response) => {
-    //       this.alertService.success('Information updated');
-    //       this.router.navigate(['/private/users']);
-    //     }, e => {
-    //       this.alertService.danger(e.error.message);
-    //       this.loaderService.stop();
-    //     }, () => {
-    //       this.loaderService.stop();
-    //     });
-    // } else {
-    //
-    //   this.userService
-    //     .addUser({...this.userForm.value, logo: this.selectedFileTo64base, logo_type: this.selectedFileType})
-    //     .subscribe((response) => {
-    //       if (response.data.length > 0) {
-    //         console.log('create user response:', response);
-    //         this.alertService.success('Account created successfully.');
-    //         this.router.navigate(['/private/users']);
-    //       }
-    //     }, event => {
-    //       this.alertService.danger(event.error.message);
-    //       this.loaderService.stop();
-    //     }, () => {
-    //       this.loaderService.stop();
-    //     });
-    // }
-    // if (+this.userId === this.currentUserId) {
-    //   this.userService.sendUpdatedLogo(this.selectedFileTo64base);
-    // }
   }
-
-  // private toBase64(file: File) {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.readAsDataURL(file);
-  //     reader.onload = () => resolve(reader.result);
-  //     reader.onerror = error => reject(error);
-  //   });
-  // }
 }

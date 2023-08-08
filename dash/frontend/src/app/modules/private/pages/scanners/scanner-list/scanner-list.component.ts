@@ -3,10 +3,10 @@ import { ScannerService } from '../../../../../core/services/scanner.service';
 import { JwtAuthService } from '../../../../../core/services/jwt-auth.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { IScanner, ScannerData } from '../../../../../core/entities/IScanner';
-import { IServerResponse } from '../../../../../core/entities/IServerResponse';
 import { MatSort } from '@angular/material/sort';
 import { ScannerCreateComponent } from '../scanner-create/scanner-create.component';
 import { MatDialog } from '@angular/material/dialog';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-scanner-list',
@@ -29,7 +29,6 @@ export class ScannerListComponent implements OnInit {
               private dialog: MatDialog) { }
 
   ngOnInit(): void {
-    console.log('Scanner Ids', this.scannerIds);
     const loggedInUser = this.jwtAuthService.getCurrentUserData();
     this.userId = loggedInUser.id;
     // this.scannerService.getAllScannersByUserId(this.userId).subscribe((response: IServerResponse<IScanner[]>) => {
@@ -47,7 +46,7 @@ export class ScannerListComponent implements OnInit {
       disableClose: true,
       data: {userId: this.userId}
     });
-    confirmDialog.afterClosed().subscribe(result => {
+    confirmDialog.afterClosed().pipe(take(1)).subscribe(result => {
       // this.getAllClusterByGroupId();
       // this.scannerService.getAllScannersByUserId(this.userId).subscribe(response => {
       //   this.dataSource = new MatTableDataSource(response.data);
@@ -68,7 +67,6 @@ export class ScannerListComponent implements OnInit {
     else {
       this.scannerData.push({scannerId: row.id, enabled: event.checked, required: false});
     }
-    console.log(this.scannerData);
   }
 
   addScannerDataForRequired(event, row) {
@@ -85,7 +83,5 @@ export class ScannerListComponent implements OnInit {
     else {
       this.scannerData.push({scannerId: row.id, enabled: false, required: event.checked});
     }
-    console.log(this.scannerData);
   }
-
 }

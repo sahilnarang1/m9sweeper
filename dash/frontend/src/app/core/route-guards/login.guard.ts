@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, Router } from '@angular/router';
 import { Observable, of} from 'rxjs';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from '../services/alert.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import {catchError, map} from 'rxjs/operators';
 import { IServerResponse } from '../entities/IServerResponse';
 import { JwtAuthService } from '../services/jwt-auth.service';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +33,9 @@ export class LoginGuard implements CanActivate {
         this.jwtAuthService.clearToken();
         return true;
       }), catchError((err: HttpErrorResponse) => {
-        console.log('LoginGuard catch. error:', err);
+        if (!environment.production) {
+          console.log('LoginGuard catch. error:', err);
+        }
         return of(true);
       })
     );

@@ -7,7 +7,7 @@ import {ShowJsonDataComponent} from '../../../../../core/dialogues/show-json-dat
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
 import {CsvService} from '../../../../../core/services/csv.service';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 
 @Component({
   selector: 'app-audit-log',
@@ -24,12 +24,14 @@ export class AuditLogComponent implements OnInit {
   totalAuditLogs = 0;
   showAuditLogTable = false;
 
-  constructor(private auditLogService: AuditLogService,
-              private formBuilder: FormBuilder,
-              private dialog: MatDialog,
-              private loaderService: NgxUiLoaderService,
-              private alertService: AlertService,
-              private csvService: CsvService) {
+  constructor(
+    private auditLogService: AuditLogService,
+    private formBuilder: FormBuilder,
+    private dialog: MatDialog,
+    private loaderService: NgxUiLoaderService,
+    private alertService: AlertService,
+    private csvService: CsvService
+  ) {
     this.filterAuditLogForm = this.formBuilder.group({
       entityId: [],
       entityTypes: [[], Validators.required],
@@ -39,23 +41,24 @@ export class AuditLogComponent implements OnInit {
   ngOnInit(): void {
     this.subNavigationTitle = 'Audit Logs';
     this.dataSource =  null;
-    // this.loadAuditLogs();
     this.getEntityTypes();
   }
 
   showMetaDataDetails(auditLog: IAuditLog) {
+    console.log(auditLog);
     this.dialogRef = this.dialog.open(ShowJsonDataComponent, {
       width: 'auto',
-      data: {content: auditLog.data, header: 'MetaData'}
+      data: {
+        content: auditLog,
+        header: `${auditLog.entityType} ${auditLog.id}`,
+      }
     });
-
-    this.dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
-    });  }
+  }
 
   filterAuditLogs() {
     const entityType = this.filterAuditLogForm.value.entityTypes;
     const entityId = this.filterAuditLogForm.value.entityId;
+
     this.auditLogService.filterAuditLogs(entityType, entityId).subscribe(response => {
       this.showAuditLogTable = true;
       this.totalAuditLogs = response.data.length;
@@ -69,15 +72,7 @@ export class AuditLogComponent implements OnInit {
     });
   }
 
-  loadAuditLogs() {
-    this.auditLogService.getAuditLogs().subscribe(response => {
-      this.totalAuditLogs = response.data.length;
-      this.dataSource = new MatTableDataSource(response.data);
-    });
-  }
-
   resetAuditLogs() {
-    // this.loadAuditLogs();
     this.showAuditLogTable = false;
   }
 

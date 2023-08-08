@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import {CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree, Router} from '@angular/router';
 import {Observable, of} from 'rxjs';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from '../services/alert.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import {catchError, map} from 'rxjs/operators';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
 import { JwtAuthService } from '../services/jwt-auth.service';
 import { IServerResponse } from '../entities/IServerResponse';
+import {environment} from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -38,7 +39,9 @@ export class AuthGuard implements CanActivate {
         this.authFailed();
         return false;
       }), catchError((err: HttpErrorResponse) => {
-        console.log('AuthGuard catch. error:', err);
+        if (!environment.production) {
+          console.log('AuthGuard catch. error:', err);
+        }
         this.authFailed();
         return of(false);
       })

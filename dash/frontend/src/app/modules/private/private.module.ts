@@ -41,8 +41,6 @@ import { PolicyListComponent } from './pages/policies/policy-list/policy-list.co
 import { PolicyCreateComponent } from './pages/policies/policy-create/policy-create.component';
 import { ScannerCreateComponent } from './pages/scanners/scanner-create/scanner-create.component';
 import { ScannerListComponent } from './pages/scanners/scanner-list/scanner-list.component';
-import { AppSettingsComponent } from './pages/app-settings/app-settings.component';
-import { CreateAppSettingsComponent } from './pages/app-settings/create-app-settings/create-app-settings.component';
 import { SubNavigationComponent } from '../shared/subnavigation/sub-navigation.component';
 import { ChangePasswordComponent } from './pages/change-password/change-password.component';
 import { ExternalAuthConfigurationListComponent } from './pages/external-auth-configuration/external-auth-configuration-list/external-auth-configuration-list.component';
@@ -77,8 +75,6 @@ import { GateKeeperComponent } from './pages/cluster/gate-keeper/gate-keeper.com
 import { GateKeeperDetailsComponent } from './pages/cluster/gate-keeper-details/gate-keeper-details.component';
 import { KubernetesPodDetailsComponent } from './pages/cluster/kubernetes-pod-details/kubernetes-pod-details.component';
 import { MatSliderModule } from '@angular/material/slider';
-import { LicensesComponent } from './pages/license/licenses/licenses.component';
-import { LicenseCheckComponent } from './pages/license/license-check/license-check.component';
 import { AddConstraintDialogComponent } from './pages/cluster/add-constraint-dialog/add-constraint-dialog.component';
 import { AddCustomConstraintTemplateComponent } from './pages/cluster/add-custom-constraint-template/add-custom-constraint-template.component';
 import { CodemirrorModule } from '@ctrl/ngx-codemirror';
@@ -121,8 +117,8 @@ import {
 } from './pages/reports/vulnerability-difference-by-date/vulnerability-difference-by-date.component';
 import {FalcoEventsListComponent} from './pages/falco/falco-events-list/falco-events-list.component';
 import {FalcoDialogComponent} from './pages/falco/falco-dialog/falco-dialog.component';
-import {ShowJsonDataMoreComponent} from '../../core/dialogues/show-json-data-more/show-json-data-more.component';
-import {ShareEventComponent} from '../../core/dialogues/show-json-data-more/share-event.component';
+import {FalcoEventDetailsComponent} from './pages/falco/falco-event-details/falco-event-details.component';
+import {ShareLinkComponent} from '../../core/dialogues/share-link/share-link.component';
 import {FalcoSettingsComponent} from './pages/falco/falco-settings/falco-settings.component';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {TablifyPipe} from '../../core/pipe/tablify.pipe';
@@ -131,6 +127,10 @@ import { FalcoRuleAddEditDialogComponent } from './pages/falco/falco-rule-add-ed
 import { FalcoOrgSettingsPageComponent } from './pages/falco/falco-org-settings-page/falco-org-settings-page.component';
 import { FalcoRulesClusterListComponent } from './pages/falco/falco-rules-cluster-list/falco-rules-cluster-list.component';
 import {ArrayTextPipe} from '../../core/pipe/array-text.pipe';
+import {MenuComponent} from './menus/menu.component';
+import {FalcoJsonDataDialogComponent} from './pages/falco/falco-json-data-dialog/falco-json-data-dialog.component';
+import {FalcoRelatedEventsTableComponent} from './pages/falco/falco-related-events-table/falco-related-events-table.component';
+import {KubesecReportComponent} from './pages/cluster/kubesec/kubesec-report/kubesec-report.component';
 
 
 @NgModule({
@@ -151,8 +151,6 @@ import {ArrayTextPipe} from '../../core/pipe/array-text.pipe';
     PolicyCreateComponent,
     ScannerCreateComponent,
     ScannerListComponent,
-    AppSettingsComponent,
-    CreateAppSettingsComponent,
     SubNavigationComponent,
     ChangePasswordComponent,
     ExternalAuthConfigurationListComponent,
@@ -177,19 +175,20 @@ import {ArrayTextPipe} from '../../core/pipe/array-text.pipe';
     ExceptionDetailsComponent,
     FalcoEventsListComponent,
     FalcoDialogComponent,
+    FalcoJsonDataDialogComponent,
+    FalcoRelatedEventsTableComponent,
     FalcoSettingsComponent,
     AddClusterWizardComponent,
     GateKeeperComponent,
     GateKeeperDetailsComponent,
     GateKeeperInstallWizardDialogComponent,
-    LicensesComponent,
-    LicenseCheckComponent,
     AddConstraintDialogComponent,
     AddCustomConstraintTemplateComponent,
     AddTemplateConstraintComponent,
     AddConstraintCriteriaComponent,
     TemplateConstraintManifestComponent,
     KubesecComponent,
+    KubesecReportComponent,
     ServiceAccountWizardComponent,
     KubeHunterComponent,
     KubeHunterDialogComponent,
@@ -214,8 +213,8 @@ import {ArrayTextPipe} from '../../core/pipe/array-text.pipe';
     WorstImagesComponent,
     AuditLogComponent,
     ShowJsonDataComponent,
-    ShowJsonDataMoreComponent,
-    ShareEventComponent,
+    FalcoEventDetailsComponent,
+    ShareLinkComponent,
     DockerRegistryAuthTypePipe,
     VulnerabilityDifferenceOverTimeComponent,
     VulnerabilityDifferenceByDateComponent,
@@ -223,50 +222,51 @@ import {ArrayTextPipe} from '../../core/pipe/array-text.pipe';
     FalcoOrgSettingsPageComponent,
     FalcoRulesClusterListComponent,
     ArrayTextPipe,
+    MenuComponent,
   ],
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    PrivateRoutingModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatSidenavModule,
-    MatListModule,
-    MatButtonModule,
-    MatCardModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatGridListModule,
-    MatCheckboxModule,
-    MatDatepickerModule,
-    MatRadioModule,
-    MatSelectModule,
-    MatMenuModule,
-    MatDialogModule,
-    MatChipsModule,
-    NgxChartsModule,
-    MatAutocompleteModule,
-    MatSlideToggleModule,
-    MatTabsModule,
-    SharedModule,
-    MatNativeDateModule,
-    FontAwesomeModule,
-    InfiniteScrollModule,
-    MatTooltipModule,
-    MatStepperModule,
-    MatProgressSpinnerModule,
-    NgxUiLoaderModule,
-    MatSliderModule,
-    CodemirrorModule,
-    MaterialDesignFrameworkModule,
-    JsonSchemaFormModule,
-    MatExpansionModule,
-    MatButtonToggleModule,
-    NgOptimizedImage
+      CommonModule,
+      FormsModule,
+      ReactiveFormsModule,
+      PrivateRoutingModule,
+      MatToolbarModule,
+      MatIconModule,
+      MatSidenavModule,
+      MatListModule,
+      MatButtonModule,
+      MatCardModule,
+      MatTableModule,
+      MatSortModule,
+      MatPaginatorModule,
+      MatFormFieldModule,
+      MatInputModule,
+      MatGridListModule,
+      MatCheckboxModule,
+      MatDatepickerModule,
+      MatRadioModule,
+      MatSelectModule,
+      MatMenuModule,
+      MatDialogModule,
+      MatChipsModule,
+      NgxChartsModule,
+      MatAutocompleteModule,
+      MatSlideToggleModule,
+      MatTabsModule,
+      SharedModule,
+      MatNativeDateModule,
+      FontAwesomeModule,
+      InfiniteScrollModule,
+      MatTooltipModule,
+      MatStepperModule,
+      MatProgressSpinnerModule,
+      NgxUiLoaderModule,
+      MatSliderModule,
+      CodemirrorModule,
+      MaterialDesignFrameworkModule,
+      JsonSchemaFormModule,
+      MatExpansionModule,
+      MatButtonToggleModule,
+      NgOptimizedImage,
   ],
   providers: [
     DatePipe

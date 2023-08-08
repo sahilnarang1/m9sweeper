@@ -1,13 +1,12 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import {AfterViewInit, Component, HostListener, OnDestroy, OnInit} from '@angular/core';
 import { take, takeUntil } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 import {FormBuilder, FormGroup} from '@angular/forms';
 import { NamespaceService } from '../../../../../core/services/namespace.service';
 import { ImageService } from '../../../../../core/services/image.service';
 import { differenceInCalendarDays, format, isAfter, sub, startOfToday } from 'date-fns';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import { Subject } from 'rxjs';
-import { SharedSubscriptionService } from '../../../../../core/services/shared.subscription.service';
 import { VulnerabilitySeverity } from '../../../../../core/enum/VulnerabilitySeverity';
 import { ReportsService } from '../../../../../core/services/reports.service';
 import {ChartSizeService} from '../../../../../core/services/chart-size.service';
@@ -18,7 +17,7 @@ import {CustomValidatorService} from '../../../../../core/services/custom-valida
   templateUrl: './worst-images.component.html',
   styleUrls: ['./worst-images.component.scss']
 })
-export class WorstImagesComponent implements OnInit, OnDestroy {
+export class WorstImagesComponent implements OnInit, AfterViewInit, OnDestroy {
   private unsubscribe$ = new Subject<void>();
   clusterId: number;
   filterForm: FormGroup;
@@ -44,6 +43,7 @@ export class WorstImagesComponent implements OnInit, OnDestroy {
   startDate: string;
   endDate: string;
   namespaces: Array<string>;
+  resizeTimeout;
 
   constructor(
     private route: ActivatedRoute,
@@ -51,7 +51,6 @@ export class WorstImagesComponent implements OnInit, OnDestroy {
     private namespaceService: NamespaceService,
     private imageService: ImageService,
     private alertService: AlertService,
-    private sharedSubscriptionService: SharedSubscriptionService,
     private reportService: ReportsService,
     private chartSizeService: ChartSizeService,
     private customValidatorService: CustomValidatorService,
@@ -84,13 +83,9 @@ export class WorstImagesComponent implements OnInit, OnDestroy {
     this.namespaces = new Array<string>();
 
     this.buildBarChartData();
+  }
 
-    this.sharedSubscriptionService.getCurrentExpandStatus()
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe(() => {
-        this.setChartSize();
-      });
-
+  ngAfterViewInit() {
     this.setChartSize();
   }
 
@@ -162,10 +157,35 @@ export class WorstImagesComponent implements OnInit, OnDestroy {
     this.setChartSize();
   }
 
-  setChartSize() {
+  setChartSize(isInitial = false) {
+    // debounce chart resizing
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      this.executeResize(isInitial);
+    }, 100);
+  }
+
+  executeResize(isInitial = false) {
     const innerWindow = document.getElementsByTagName('app-worst-images').item(0) as HTMLElement;
-    const innerScreenWidth = innerWindow.offsetWidth;
-    this.barChartAttributes.view = this.chartSizeService.getReportChartSize(innerScreenWidth);
+    let innerScreenWidth = innerWindow.offsetWidth;
+    if (isInitial) {
+      const sideNav = document.getElementById('primary-side-nav');
+      if (sideNav.style.visibility !== 'hidden') {
+        // have to do this the first time b/c the side nav is not yet in place
+        // --> the width retrieved doesn't take it into account
+        innerScreenWidth -= sideNav.clientWidth;
+      }
+    }
+    this.barChartAttributes.view = this.chartSizeService.getChartSize(
+      innerScreenWidth,
+      { xs: 1, s: 1, m: 1, l: 1 },
+      { left: 20, right: 20 },
+      { left: 0, right: 0 },
+      { left: 0, right: 0 },
+      { left: 16, right: 16 },
+      { height: 3, width: 8 },
+      600,
+    );
   }
 
   ngOnDestroy() {

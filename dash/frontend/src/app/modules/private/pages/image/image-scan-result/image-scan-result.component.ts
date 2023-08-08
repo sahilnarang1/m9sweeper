@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, OnInit, ViewChild, OnDestroy} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {ImageService} from '../../../../../core/services/image.service';
 import {ImageScanResultIssueService} from '../../../../../core/services/image-scan-result-issue.service';
 import {IServerResponse} from '../../../../../core/entities/IServerResponse';
@@ -18,6 +18,7 @@ import { ImageIssueMoreDataDialogComponent } from '../image-issue-more-data-dial
 import { switchMap, take, takeUntil } from 'rxjs/operators';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
 import {CsvService} from '../../../../../core/services/csv.service';
+import {VulnerabilitySeverity, VulnerabilitySeverityAbbreviations} from '../../../../../core/enum/VulnerabilitySeverity';
 
 
 @Component({
@@ -35,7 +36,8 @@ export class ImageScanResultComponent implements OnInit, AfterViewInit, OnDestro
     'major_issues',
     'medium_issues',
     'low_issues',
-    'negligible_issues'];
+    'negligible_issues'
+  ];
   issuesDisplayedColumns: string[] = [
     'scanner',
     'isCompliant',
@@ -83,6 +85,9 @@ export class ImageScanResultComponent implements OnInit, AfterViewInit, OnDestro
 
   lastScanReport: IImageScanData;
   private unsubscribe$ = new Subject<void>();
+
+  protected readonly VulnerabilitySeverityAbbreviations = VulnerabilitySeverityAbbreviations;
+  protected readonly VulnerabilitySeverity = VulnerabilitySeverity;
 
   constructor(
     private titleService: Title,
@@ -138,6 +143,9 @@ export class ImageScanResultComponent implements OnInit, AfterViewInit, OnDestro
           } else {
             this.displayImageScanSpinner$ = of(false);
           }
+          if (!this.dataSource.dockerImageId) {
+            return of({data: []});
+          }
           return this.imageService.getNamespaceByImageHash(this.dataSource.dockerImageId);
         }),
         take(1),
@@ -145,8 +153,10 @@ export class ImageScanResultComponent implements OnInit, AfterViewInit, OnDestro
       .subscribe((namespaces) => {
           this.imageNamespaces = namespaces.data.map(namespace => namespace.namespace);
     }, error => {
-      this.alertService.danger(error.error.message);
-      // this.router.navigate(['/private']);
+        console.error(error);
+        if (error?.error) {
+          this.alertService.danger(error.error.message || error.error);
+        }
     });
   }
 
@@ -194,6 +204,7 @@ export class ImageScanResultComponent implements OnInit, AfterViewInit, OnDestro
         }
       },
       (error => {
+        console.log(error);
         this.alertService.danger(error.error.message);
       }));
   }

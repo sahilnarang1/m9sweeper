@@ -1,6 +1,6 @@
 import {Component, Input} from '@angular/core';
 import {Clipboard} from '@angular/cdk/clipboard';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 
 @Component({
   selector: 'app-copy-to-clipboard-button',
@@ -15,6 +15,9 @@ export class CopyToClipboardButtonComponent {
 
   /** The message that will be shown in a toast if the text can't be copied. */
   @Input() errorMessage = 'Text could not be copied to clipboard.';
+
+  /** Display only an icon as the button if true */
+  @Input() iconButton = false;
 
   constructor(
     private cb: Clipboard,

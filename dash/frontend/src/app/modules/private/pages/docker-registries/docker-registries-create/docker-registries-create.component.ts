@@ -2,7 +2,7 @@ import {Component, Inject, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {DockerRegistriesService} from '../../../../../core/services/docker-registries.service';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {CustomValidators} from '../../../form-validator/custom-validators';
 import {IDockerRegistries} from '../../../../../core/entities/IDockerRegistries';
 import {JwtAuthService} from '../../../../../core/services/jwt-auth.service';
@@ -90,6 +90,8 @@ export class DockerRegistriesCreateComponent implements OnInit {
 
   onSubmit() {
     const dockerRegistryData = this.createDockerRegistryForm.getRawValue();
+    // New Angular version returns sets as arrays in getRawValue, correct that here
+    dockerRegistryData.aliases = new Set(dockerRegistryData.aliases);
     switch (dockerRegistryData.authType) {
       case DockerRegistryAuthTypes.GOOGLE_CONTAINER_REGISTRY:
         try {

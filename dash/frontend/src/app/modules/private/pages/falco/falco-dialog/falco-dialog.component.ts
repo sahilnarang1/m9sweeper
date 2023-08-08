@@ -4,9 +4,6 @@ import {Subject} from 'rxjs';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {CommonService} from '../../../../../core/services/common.service';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
-import {KubeHunterService} from '../../../../../core/services/kube-hunter.service';
-import {AlertService} from '@full-fledged/alerts';
-import {Router} from '@angular/router';
 import {FalcoService} from '../../../../../core/services/falco.service';
 
 @Component({
@@ -29,15 +26,13 @@ export class FalcoDialogComponent implements OnInit {
     private commonService: CommonService,
     private loaderService: NgxUiLoaderService,
     private falcoService: FalcoService,
-
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loaderService.start();
     this.commonService.getBaseUrl().pipe(take(1)).subscribe(url => {
       this.backendUrl = url.data.baseUrl;
       this.loaderService.stop();
-
     });
     this.clusterId = this.data.clusterId;
     this.falcoService.getFalcoApiKey().pipe(take(1)).subscribe({

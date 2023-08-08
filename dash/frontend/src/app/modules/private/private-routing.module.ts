@@ -12,7 +12,6 @@ import {OrganizationSettingsComponent} from './pages/organization-settings/organ
 import {PolicyListComponent} from './pages/policies/policy-list/policy-list.component';
 import {ScannerListComponent} from './pages/scanners/scanner-list/scanner-list.component';
 import {PolicyCreateComponent} from './pages/policies/policy-create/policy-create.component';
-import {AppSettingsComponent} from './pages/app-settings/app-settings.component';
 import {ChangePasswordComponent} from './pages/change-password/change-password.component';
 import {ExternalAuthConfigurationListComponent} from './pages/external-auth-configuration/external-auth-configuration-list/external-auth-configuration-list.component';
 import {Authority} from '../../core/enum/Authority';
@@ -34,7 +33,6 @@ import {ExceptionDetailsComponent} from './pages/exceptions/exception-details/ex
 import {GateKeeperComponent} from './pages/cluster/gate-keeper/gate-keeper.component';
 import {GateKeeperDetailsComponent} from './pages/cluster/gate-keeper-details/gate-keeper-details.component';
 import {KubernetesPodDetailsComponent} from './pages/cluster/kubernetes-pod-details/kubernetes-pod-details.component';
-import {LicensesComponent } from './pages/license/licenses/licenses.component';
 import {KubesecComponent} from './pages/cluster/kubesec/kubesec.component';
 import {KubeHunterReportDetailsComponent} from './pages/cluster/kube-hunter/kube-hunter-report-details/kube-hunter-report-details.component';
 import {KubeHunterComponent} from './pages/cluster/kube-hunter/kube-hunter.component';
@@ -54,7 +52,7 @@ import {
   VulnerabilityDifferenceByDateComponent
 } from './pages/reports/vulnerability-difference-by-date/vulnerability-difference-by-date.component';
 import {FalcoEventsListComponent} from './pages/falco/falco-events-list/falco-events-list.component';
-import {ShowJsonDataMoreComponent} from '../../core/dialogues/show-json-data-more/show-json-data-more.component';
+import {FalcoEventDetailsComponent} from './pages/falco/falco-event-details/falco-event-details.component';
 import {FalcoSettingsComponent} from './pages/falco/falco-settings/falco-settings.component';
 import {FalcoOrgSettingsPageComponent} from './pages/falco/falco-org-settings-page/falco-org-settings-page.component';
 
@@ -137,7 +135,7 @@ const routes: Routes = [
               },
               {
                 path: 'more/:eventId/signature/:signature',
-                component: ShowJsonDataMoreComponent,
+                component: FalcoEventDetailsComponent,
                 data: {
                   title: 'Project Falco Detail Logs'
                 }
@@ -268,7 +266,7 @@ const routes: Routes = [
             path: 'gatekeeper',
             component: GateKeeperComponent,
             data: {
-              title: 'GateKeeper Constraints'
+              title: 'Gatekeeper Constraints'
             }
           },
           {
@@ -282,35 +280,35 @@ const routes: Routes = [
             path: 'kubesec',
             component: KubesecComponent,
             data: {
-              title: 'KubeSec'
+              title: 'Kubesec'
             }
           },
           {
             path: 'kubehunter',
             component: KubeHunterComponent,
             data: {
-              title: 'KubeHunter'
+              title: 'kube-hunter'
             }
           },
           {
             path: 'kubehunter/:id',
             component: KubeHunterReportDetailsComponent,
             data: {
-              title: 'Kube-Hunter Report Details'
+              title: 'kube-hunter Report Details'
             }
           },
           {
             path: 'kubebench',
             component: KubeBenchComponent,
             data: {
-              title: 'KubeBench'
+              title: 'kube-bench'
             }
           },
           {
             path: 'kubebench/:id',
             component: KubeBenchReportDetailsComponent,
             data: {
-              title: 'Kube Bench Report Details'
+              title: 'kube-bench Report Details'
             }
           },
         ]
@@ -350,23 +348,6 @@ const routes: Routes = [
         ]
       },
       {
-        path: 'licenses',
-        component: OrganizationSettingsComponent,
-        canActivate: [RoleGuard],
-        data: {
-          allowedUserRoles: [Authority.SUPER_ADMIN, Authority.ADMIN, Authority.READ_ONLY]
-        },
-        children: [
-          {
-            path: '',
-            component: LicensesComponent,
-            data: {
-              title: 'Licenses'
-            }
-          },
-        ]
-      },
-      {
         path: 'single-sign-on', component: OrganizationSettingsComponent,
         canActivate: [RoleGuard],
         data: {
@@ -378,23 +359,6 @@ const routes: Routes = [
             component: ExternalAuthConfigurationListComponent,
             data: {
               title: 'External Auth'
-            }
-          },
-        ]
-      },
-      {
-        path: 'settings',
-        component: OrganizationSettingsComponent,
-        canActivate: [RoleGuard],
-        data: {
-          allowedUserRoles: [Authority.SUPER_ADMIN, Authority.ADMIN, Authority.READ_ONLY]
-        },
-        children: [
-          {
-            path: '',
-            component: AppSettingsComponent,
-            data: {
-              title: 'Settings'
             }
           },
         ]

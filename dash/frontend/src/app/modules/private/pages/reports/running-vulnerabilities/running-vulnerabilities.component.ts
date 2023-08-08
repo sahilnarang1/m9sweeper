@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
 import {ReportsService} from '../../../../../core/services/reports.service';
 import {ActivatedRoute} from '@angular/router';
 import {take} from 'rxjs/operators';
@@ -7,9 +7,11 @@ import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {NamespaceService} from '../../../../../core/services/namespace.service';
 import {NgxUiLoaderService} from 'ngx-ui-loader';
 import {CsvService} from '../../../../../core/services/csv.service';
-import {AlertService} from '@full-fledged/alerts';
+import {AlertService} from 'src/app/core/services/alert.service';
 import {IRunningVulnerabilities} from '../../../../../core/entities/IRunningVulnerabilitiesPreview';
 import {format} from 'date-fns';
+import {MatPaginator} from '@angular/material/paginator';
+import {VulnerabilitySeverityAbbreviations} from '../../../../../core/enum/VulnerabilitySeverity';
 
 
 @Component({
@@ -17,10 +19,14 @@ import {format} from 'date-fns';
   templateUrl: './running-vulnerabilities.component.html',
   styleUrls: ['./running-vulnerabilities.component.scss']
 })
-export class RunningVulnerabilitiesComponent implements OnInit {
+export class RunningVulnerabilitiesComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
   clusterId: number;
   vulnerabilityCount: number;
   limit: number;
+  page = 0;  // which page we're on
+  lowNumCurrentShownVulnerabilities: number;
+  highNumCurrentShownVulnerabilities: number;
   vulnerabilities: Array<IRunningVulnerabilities>;
   dataSource: MatTableDataSource<IRunningVulnerabilities>;
   displayedColumns: string[] = ['image', 'namespaces', 'scanResults', 'lastScanned', 'totalCritical', 'totalMajor',
@@ -29,6 +35,7 @@ export class RunningVulnerabilitiesComponent implements OnInit {
   filterForm: FormGroup;
   clusterNamespaces: Array<string>;
   previousRequest: {namespaces, isCompliant};
+  protected readonly VulnerabilitySeverityAbbreviations = VulnerabilitySeverityAbbreviations;
 
   constructor(
     private reportsService: ReportsService,
@@ -42,6 +49,12 @@ export class RunningVulnerabilitiesComponent implements OnInit {
 
   ngOnInit() {
     this.limit = 20;
+    this.filterForm = this.formBuilder.group({
+      limit: [this.limit, [Validators.required, Validators.min(1)]],
+      namespaces: [[]],
+      date: [],
+      isCompliant: []
+    });
     this.route.parent.parent.params
       .pipe(take(1))
       .subscribe(param => this.clusterId = param.id);
@@ -56,29 +69,51 @@ export class RunningVulnerabilitiesComponent implements OnInit {
         }
         this.clusterNamespaces.sort();
       });
-
-    this.filterForm = this.formBuilder.group({
-      limit: [this.limit, [Validators.required, Validators.min(1)]],
-      namespaces: [[]],
-      date: [],
-      isCompliant: []
-    });
+  }
+  ngAfterViewInit() {
+    this.paginator.pageSize = this.limit;
   }
 
-  buildReport(limit: number, clusterId: number, namespaces?: string[], date?: string, isCompliant?: boolean) {
+  pageEvent(pageEvent: any) {
+    this.page = pageEvent.pageIndex;
+
+    this.buildReport(
+      pageEvent.pageSize,
+      this.clusterId,
+      this.filterForm.get('namespaces').value,
+      this.filterForm.get('isCompliant').value
+    ); // reload when page event changes
+  }
+
+  buildReport(limit: number, clusterId: number, namespaces?: string[], isCompliant?: boolean) {
     this.loaderService.start();
-    this.reportsService.getRunningVulnerabilities(limit, clusterId, namespaces, date, isCompliant)
+    let date;
+    if (this.filterForm.get('date').value) {
+      date = format(new Date(this.filterForm.get('date').value), 'yyyy-MM-dd');
+    }
+    this.reportsService.getRunningVulnerabilities(limit, clusterId, namespaces, date, isCompliant, this.page)
       .pipe(take(1))
       .subscribe(response => {
         this.vulnerabilityCount = response.data.count;
         this.vulnerabilities = response.data.results;
         this.dataSource = new MatTableDataSource(response.data.results);
+        this.limit = limit;
+        this.paginator.pageSize = limit;
+        this.filterForm.get('limit').setValue(limit);
+        this.lowNumCurrentShownVulnerabilities = (this.limit * this.page) + 1;
+        this.highNumCurrentShownVulnerabilities = (this.limit * this.page) + response.data.results.length;
         if (this.vulnerabilityCount < this.limit) {
           this.limit = this.vulnerabilityCount;
         }
         this.loaderService.stop();
       }, (err) => {
-        this.alertService.warning((err));
+        if (err?.error && err.error?.message) {
+          this.alertService.warning(err.error.message);
+        } else if (err?.error) {
+          this.alertService.warning(err.error);
+        } else {
+          this.alertService.warning(err);
+        }
         this.loaderService.stop();
       });
   }
@@ -88,27 +123,25 @@ export class RunningVulnerabilitiesComponent implements OnInit {
       this.alertService.warning('Invalid filter settings; please recheck filter values');
     }
     else {
-      this.limit = this.filterForm.get('limit').value;
+      this.paginator.pageIndex = 0;
+      this.page = 0;
       this.previousRequest = {
         namespaces: this.filterForm.get('namespaces').value,
         isCompliant: this.filterForm.get('isCompliant').value
       };
-      let date;
-      if (this.filterForm.get('date').value) {
-        date = format(new Date(this.filterForm.get('date').value), 'yyyy-MM-dd');
-      }
+      const newLimit = this.filterForm.get('limit').value;
       this.buildReport(
-        this.limit,
+        newLimit,
         this.clusterId,
         this.filterForm.get('namespaces').value,
-        date,
         this.filterForm.get('isCompliant').value
       );
     }
   }
 
   get filtersValid(): boolean {
-    return this.filterForm.valid;
+    return true;
+    // return this.filterForm.valid;
   }
 
   downloadReport() {

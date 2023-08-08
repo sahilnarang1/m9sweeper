@@ -1,14 +1,15 @@
-<div>
-  <div class="item-sub-navigation">
-    <div class="item-name">
-      {{ title }}
-    </div>
+<div class="row" id="sub-navigation-wrapper">
+  <div class="col-xs-12 col-sm-6" id="sub-navigation-title">
+    {{ title }}
   </div>
-  <div class="item-create">
-    <div class="item-create-button" *ngIf="buttonTitle || buttonUrl || clickFunction">
-      <button mat-button class="new-item" [routerLink]="buttonUrl">{{buttonTitle}}</button>
-    </div>
-    <div class="item-search">
-    </div>
+  <div *ngIf="buttonTitle || buttonUrl || button2" class="col-xs-12 col-sm-6 start-xs end-sm" id="sub-navigation-buttons">
+    <button mat-raised-button color="primary" [routerLink]="buttonUrl" (click)="emitButtonEvent($event)" id="sub-navigation-button-one">
+      <mat-icon *ngIf="buttonIcon">{{buttonIcon}}</mat-icon>
+      {{buttonTitle}}
+    </button>
+    <button mat-raised-button *ngIf="button2" [color]="button2.color || 'accent'" [routerLink]="button2.url" (click)="emitButton2Event($event)" id="sub-navigation-button-two">
+      <mat-icon *ngIf="button2?.icon">{{button2.icon}}</mat-icon>
+      {{button2.title}}
+    </button>
   </div>
 </div>

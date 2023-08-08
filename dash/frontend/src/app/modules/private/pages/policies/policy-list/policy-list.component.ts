@@ -6,11 +6,13 @@ import { MatPaginator } from '@angular/material/paginator';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IPolicy } from '../../../../../core/entities/IPolicy';
 import { PolicyService } from '../../../../../core/services/policy.service';
-import { AlertService } from '@full-fledged/alerts';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { IServerResponse } from '../../../../../core/entities/IServerResponse';
 import { PolicyCreateComponent } from '../policy-create/policy-create.component';
-import {ConfirmationDialogComponent} from '../../../../shared/confirmation-dialog/confirmation-dialog.component';
 import {merge} from 'rxjs';
+import {AlertDialogComponent} from '../../../../shared/alert-dialog/alert-dialog.component';
+import {take} from 'rxjs/operators';
+import {JwtAuthService} from '../../../../../core/services/jwt-auth.service';
 
 @Component({
   selector: 'app-policy-list',
@@ -19,7 +21,8 @@ import {merge} from 'rxjs';
 })
 export class PolicyListComponent implements OnInit, AfterViewInit{
   subMenuTitle = 'All Policies';
-  displayedColumns: string[] = ['name', 'description', 'new_scan_grace_period', 'rescan_grace_period', 'actions'];
+  displayedColumns: string[] = ['name', 'description', 'new_scan_grace_period', 'rescan_grace_period', 'edit', 'delete'];
+  displayedColumnsNonAdmin: string[] = ['name', 'description', 'new_scan_grace_period', 'rescan_grace_period', 'edit'];
   dataSource: MatTableDataSource<IPolicy>;
   clusterId: number;
   subNavigationData: any;
@@ -33,13 +36,21 @@ export class PolicyListComponent implements OnInit, AfterViewInit{
   page = 0;
   totalCount = 0;
   data: IPolicy[] = [];
+  isAdmin: boolean;
 
   constructor(
+    private jwtAuthService: JwtAuthService,
     private policyService: PolicyService,
     private router: Router,
     private route: ActivatedRoute,
     private alertService: AlertService,
-    public dialog: MatDialog) { }
+    public dialog: MatDialog
+  ) {
+    this.isAdmin = this.jwtAuthService.isAdmin();
+    if (!this.isAdmin) {
+      this.displayedColumns = this.displayedColumnsNonAdmin;
+    }
+  }
 
   ngOnInit(): void {
     this.subNavigationTitle = 'Policies';
@@ -71,37 +82,29 @@ export class PolicyListComponent implements OnInit, AfterViewInit{
   }
 
   alertDeletePolicy(id: number) {
-    const openRemoveDialog = this.dialog.open(ConfirmationDialogComponent, {
+    const openRemoveDialog = this.dialog.open(AlertDialogComponent , {
       width: '400px',
       closeOnNavigation: true,
       disableClose: true
     });
 
-    openRemoveDialog.afterClosed().subscribe(result => {
-      if (result === undefined) {
-        this.deletePolicyById(id);
-      }
-    });
+    openRemoveDialog.afterClosed()
+      .pipe(take(1))
+      .subscribe({
+        next: result => {
+          if (result === true) {
+            this.deletePolicyById(id);
+          }
+        }
+      });
   }
 
   deletePolicyById(id: number){
-    this.policyService.deletePolicyById(id).subscribe((response: IServerResponse<number>) => {
+    this.policyService.deletePolicyById(id).subscribe(() => {
         this.alertService.success('Policy deleted successfully');
     }, error => {
       this.alertService.danger(error.error.message);
     }, () => {
-      this.getPolicyList();
-    });
-  }
-
-  openPolicyDialog(id: number) {
-    const openPolicyDialog = this.dialog.open(PolicyCreateComponent, {
-      width: '600px',
-      closeOnNavigation: true,
-      disableClose: true,
-      // data: {clusterId: this.clusterId}
-    });
-    openPolicyDialog.afterClosed().subscribe(result => {
       this.getPolicyList();
     });
   }

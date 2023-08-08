@@ -1,7 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { AlertService } from '@full-fledged/alerts';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { ImageService } from '../../../../../core/services/image.service';
 import { DockerRegistriesService } from '../../../../../core/services/docker-registries.service';
 import { IDockerRegistries } from '../../../../../core/entities/IDockerRegistries';
@@ -66,7 +66,6 @@ export class CreateImageComponent implements OnInit {
       containerPath += `${splitOnSlash.shift()}/`;
     }
     containerPath += splitOnSlash.shift();
-    // console.log({containerRegistry, containerPath, imageTag});
     this.imageForm.get('url').setValue(containerRegistry);
     this.imageForm.get('name').setValue(containerPath);
     this.imageForm.get('tag').setValue(imageTag);

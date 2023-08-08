@@ -1,8 +1,6 @@
 import {Injectable} from '@nestjs/common';
 import {DatabaseService} from '../../shared/services/database.service';
 import {AppSettingsType, SiteSettingsType} from '../enums/settings-enums';
-import {plainToInstance} from "class-transformer";
-import {LicenseSettingDto} from "../../../integrations/licensing-portal/licensing-portal.dto";
 
 @Injectable()
 export class AppSettingsDao {
@@ -44,21 +42,10 @@ export class AppSettingsDao {
                     .returning(['id AS id', 'name AS name', 'value AS value',
                         'created_by AS createdBy', 'created_at AS createdAt',
                         'updated_by AS updatedBy', 'updated_at AS updatedAt'])
-                    .then((result: any) => {
-                        return Array.isArray(result.rows) && result.rows.length > 0 ? result.rows[0] : null;
+                    .then((result: any[]) => {
+                        return Array.isArray(result) && result.length > 0 ? result[0] : null;
                     });
             }));
         });
-    }
-
-    async getLicenseSettingsFromDash(): Promise<LicenseSettingDto[]> {
-        const knex = await this.databaseService.getConnection();
-        return knex
-            .select('*')
-            .from('organization_settings as os')
-            .where('os.settings_id', AppSettingsType.LICENSE_SETTINGS)
-            .then(data => {
-                return plainToInstance(LicenseSettingDto, data);
-            });
     }
 }

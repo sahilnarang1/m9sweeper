@@ -1,7 +1,7 @@
 #####################
 ## STAGE 1 - BUILD ##
 #####################
-FROM node:18-buster-slim as builder
+FROM node:18.17-buster-slim as builder
 
 # Install Python3 used in dependencies for building
 RUN apt update && \
@@ -14,14 +14,12 @@ COPY ./dash/backend/package-lock.json /usr/src/app/backend
 RUN mkdir /usr/src/app/backend/vendor
 COPY ./dash/backend/vendor /usr/src/app/backend/vendor
 RUN node --version && npm --version
-RUN npm install -g npm@9.5.0
 RUN npm ci && \
     chown -R root:root node_modules
 
 COPY /dash/backend /usr/src/app/backend/
 RUN npm run prebuild
 
-RUN cp src/config/licensing-portal-config/misc.prod.ts src/config/misc.ts
 RUN npm run build:prod:webpack
 RUN npm prune --production
 
@@ -63,7 +61,7 @@ RUN hugo --config config-local.toml
 ######################
 ## Stage 3: DELIVER ##
 ######################
-FROM node:16-alpine
+FROM node:18.17-alpine
 
 # Make the app directory
 RUN mkdir -p /usr/src/app

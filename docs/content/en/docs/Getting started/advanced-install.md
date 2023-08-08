@@ -11,13 +11,12 @@ description: >
 
 ## Install
 
-### License
-
-To claim a free license go to [m9sweeper licensing](licensing.m9sweeper.io). Claiming a license
-is optional, but if you setup a license our online portal will enable remote monitoring. We can notify you, for example,
-if you a new version is available or if your environment is no longer being monitored for some reason.
-
 ### Installation
+
+{{% alert title="Installation Note" color="primary" %}}
+If you are installing this on Azure Kubernetes Services (AKS) or Google Kubernetes Engine (GKE) or any other installation where the kubernetes API is blocked from reaching
+out to external URL for things such as Validating Webhooks, please see the section below reguarding Validating Webhook installations.
+{{% /alert %}}
 
 We recommend putting your configuration in a values.yaml file and then deploying our app using helm. This
 example uses "helm upgrade --install", which is an idempotent way of installing and/or upgrading the app. This
@@ -42,13 +41,12 @@ which chart version you are deploying. By default, it installs the latest versio
 ## Validating Webhook
 
 If you wish to have m9sweeper prevent applications from booting up that are not compliant with your specified
-policies, you will need the validating webhook. This installs automatically and should work without any configuration.
+policies, you will need the validating webhook. This installs automatically and should work without any configuration in most installations.
 
-However, **if you are running in Azure Kubernetes Service** OR have the kubernetes api firewalled in such a way that it
-cannot reach out to a remote url for the validating webhook, then you will need to
-[setup an nginx reverse proxy](https://github.com/m9sweeper/m9sweeper/blob/main/dash/backend/scripts/proxy-webhook/README.md)
-using our reverse proxy self-installer. This script will generate a CA Certificate Bundle and Nginx configuration
-to enable the reverse proxy to work in Azure Kubernetes Service.
+However, in some installations of Kubernetes such as Azure Kubernetes Services (AKS) and Google Kubernetes Engine (GKE) as well as some others depending upon configuration, the kubernetes' API is not allowed to reach out to a remote cluster or
+a remote ingress when validating whether a pod is allowed to boot or not. Therefore, we have to set it up to connect to a pod in the local cluster as well as setup the appropriate Certificate Authority, Public, and Private Keys to enable SSL.
+This will allow the validating webhook to be hit by the Kubernetes API when validating whether a pod is compliant and allowed to boot up. To assist in this process we have developed a script that will install a nginx reverse proxy that will allow
+your kubernetes API to reach the validating webhook. For information on utilizing this script, please see the scripts documentation on our GitHub page [here](https://github.com/m9sweeper/m9sweeper/blob/main/dash/backend/scripts/proxy-webhook/README.md).
 
 ## Falco bulkhead Deployment
 
@@ -82,79 +80,79 @@ rabbitmq:
 The following table lists the configurable parameters of the chart and the default values.
 
 
-| Parameter                                                                   | Description                                                                                                        | Default                         |
-| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------| ------------------------------- |
-| **postgresql properties**                                                   |
+| Parameter                                                                                             | Description                                                                    | Default                              |
+|-------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|--------------------------------------|
+| **postgresql properties**                                                                             |                                                                                |                                      |
 |
-| `global.postgres.host`                                                      | postgresql hostname                                                                                                | `minesweeper-postgres`          |
-| `global.postgres.username`                                                  | postgresql username                                                                                                | `postgres`                      |
-| `global.postgres.password`                                                  | postgresql password                                                                                                | `postgres`                      |
-| `global.postgres.database`                                                  | postgresql database                                                                                                | `postgres`                      |
-| `global.postgres.port`                                                      | postgresql port                                                                                                    | `5432`                          |
+| `global.postgres.host`                                                                                | postgresql hostname                                                            | `minesweeper-postgres`               |
+| `global.postgres.username`                                                                            | postgresql username                                                            | `postgres`                           |
+| `global.postgres.password`                                                                            | postgresql password                                                            | `postgres`                           |
+| `global.postgres.database`                                                                            | postgresql database                                                            | `postgres`                           |
+| `global.postgres.port`                                                                                | postgresql port                                                                | `5432`                               |
 |
-| **rabbitmq properties**
+| **rabbitmq properties**                                                                               |                                                                                |                                      |
 |
-| `global.rabbitmq.host`                                                      | rabbitmq hostname                                                                                                  | `minesweeper-rabbitmq`          |
-| `global.rabbitmq.port`                                                      | rabbitmq port                                                                                                      | `5672`                          |
-| `global.rabbitmq.username`                                                  | rabbitmq username                                                                                                  | `guest`                         |
-| `global.rabbitmq.password`                                                  | rabbitmq password                                                                                                  | `guest`                         |
-| `global.rabbitmq.queueName`                                                 | rabbitmq queue name                                                                                                | `trawler_queue`                 |
-| `global.jwtSecret`                                                          | Provide a secret string that will be used to sign JWT tokens                                                       | `asdfasdfasd`                   |
-| `global.baseUrl`                                                            | URL will be used in email templates to reference a http link to Dash                                               | `localhost:3000`                |
-| `global.apiKey`                                                             | Provide a secret string that will be the default api key used for integrations                                          | `1234567890`                    |
-| `global.trawlerApiKey`                                                             | Provide a secret string that will be the default api key for trawler                                          | `1234567890`                    |
-| `global.kubeBenchApiKey`                                                             | Provide a secret string that will be the default kube bench api key                                          | `1234567890`                    |
-| `global.kubeHunterApiKey`                                                             | Provide a secret string that will be the default kube hunter api key                                          | `1234567890`                    |
-| `global.falcoApiKey`                                                             | Provide a secret string that will be the default falco API key                                          | `1234567890`                    |
+| `global.rabbitmq.host`                                                                                | rabbitmq hostname                                                              | `minesweeper-rabbitmq`               |
+| `global.rabbitmq.port`                                                                                | rabbitmq port                                                                  | `5672`                               |
+| `global.rabbitmq.username`                                                                            | rabbitmq username                                                              | `guest`                              |
+| `global.rabbitmq.password`                                                                            | rabbitmq password                                                              | `guest`                              |
+| `global.rabbitmq.queueName`                                                                           | rabbitmq queue name                                                            | `trawler_queue`                      |
+| `global.jwtSecret`                                                                                    | Provide a secret string that will be used to sign JWT tokens                   | `asdfasdfasd`                        |
+| `global.baseUrl`                                                                                      | URL will be used in email templates to reference a http link to Dash           | `localhost:3000`                     |
+| `global.apiKey`                                                                                       | Provide a secret string that will be the default api key used for integrations | `1234567890`                         |
+| `global.trawlerApiKey`                                                                                | Provide a secret string that will be the default api key for trawler           | `1234567890`                         |
+| `global.kubeBenchApiKey`                                                                              | Provide a secret string that will be the default kube-bench api key            | `1234567890`                         |
+| `global.kubeHunterApiKey`                                                                             | Provide a secret string that will be the default kube-hunter api key           | `1234567890`                         |
+| `global.falcoApiKey`                                                                                  | Provide a secret string that will be the default falco API key                 | `1234567890`                         |
 |
-| **Dash Properties**                                                          |
+| **Dash Properties**                                                                                   |                                                                                |                                      |
 |
-| `dash.image.registry`                                                       | Registry for Dash Helm chart                                                                                       | `dockerhub.io`                  |
-| `dash.image.repository`                                                     | Repository for Dash Helm chart                                                                                     | `m9sweeper/dash`                |
-| `dash.image.tag`                                                            | Tag for Dash Helm chart                                                                                            | `latest`                        |
+| `dash.image.registry`                                                                                 | Registry for Dash Helm chart                                                   | `dockerhub.io`                       |
+| `dash.image.repository`                                                                               | Repository for Dash Helm chart                                                 | `m9sweeper/dash`                     |
+| `dash.image.tag`                                                                                      | Tag for Dash Helm chart                                                        | `latest`                             |
 |
-| **values that will be used to initialize the Dash database during installation**
+| **values that will be used to initialize the Dash database during installation**                      |                                                                                |                                      |
 |
-| `dash.init.clusterGroupName`                                                | Dash Init clusterGroupName                                                                                         | `default-cluster-group`         |
-| `dash.init.clusterName`                                                     | Dash Init clusterName                                                                                              | `default-cluster`               |
-| `dash.init.superAdminEmail`                                                 | Dash Init superAdminEmail                                                                                          | `admin@test.com`                |
-| `dash.init.superAdminPassword`                                              | Dash Init superAdminPassword                                                                                       | `superadmin4me`                 |
-| `dash.init.licenseKey`                                                      | Dash Init licenseKey for permission to run project                                                                 | ``                   |
-| `dash.init.instanceKey`                                                     | Dash Init instanceKey for permission to run project                                                                | ``                   |
-| `dash.init.docker.registries.name`                                          | Dash Init Registry Name                                                                                            | ``             |
-| `dash.init.docker.registries.hostname`                                      | Dash Init Registry Hostname                                                                                        | ``        |
-| `dash.init.docker.registries.login_required`                                | Dash Init login_required                                                                                           | ``                          |
-| `dash.init.docker.registries.username`                                      | Dash Init Registry Username                                                                                        | ``                           |
-| `dash.init.docker.registries.password`                                      | Dash Init password                                                                                                 | ``                        |
-| **Trawler Configuration**                                                   |
-| `trawler.image.registry`                                                    | Registry for Trawler Helm chart                                                                                    | `dockerhub.io`                  |
-| `trawler.image.repository`                                                  | Repository for Trawler Helm chart                                                                                  | `m9sweeper/trawler`             |
-| `trawler.image.tag`                                                         | Tag for Trawler Helm chart                                                                                         | `latest`                        |
+| `dash.init.clusterGroupName`                                                                          | Dash Init clusterGroupName                                                     | `default-cluster-group`              |
+| `dash.init.clusterName`                                                                               | Dash Init clusterName                                                          | `default-cluster`                    |
+| `dash.init.superAdminEmail`                                                                           | Dash Init superAdminEmail                                                      | `admin@test.com`                     |
+| `dash.init.superAdminPassword`                                                                        | Dash Init superAdminPassword                                                   | `superadmin4me`                      |
+| `dash.init.licenseKey`                                                                                | Dash Init licenseKey for permission to run project                             | ``                                   |
+| `dash.init.instanceKey`                                                                               | Dash Init instanceKey for permission to run project                            | ``                                   |
+| `dash.init.docker.registries.name`                                                                    | Dash Init Registry Name                                                        | ``                                   |
+| `dash.init.docker.registries.hostname`                                                                | Dash Init Registry Hostname                                                    | ``                                   |
+| `dash.init.docker.registries.login_required`                                                          | Dash Init login_required                                                       | ``                                   |
+| `dash.init.docker.registries.username`                                                                | Dash Init Registry Username                                                    | ``                                   |
+| `dash.init.docker.registries.password`                                                                | Dash Init password                                                             | ``                                   |
+| **Trawler Configuration**                                                                             |                                                                                |                                      |
+| `trawler.image.registry`                                                                              | Registry for Trawler Helm chart                                                | `dockerhub.io`                       |
+| `trawler.image.repository`                                                                            | Repository for Trawler Helm chart                                              | `m9sweeper/trawler`                  |
+| `trawler.image.tag`                                                                                   | Tag for Trawler Helm chart                                                     | `latest`                             |
 |
-| **Dash Email Properties**                                                   |
+| **Dash Email Properties**                                                                             |                                                                                |                                      |
 |
-| `dash.email.method`                                                         | Email method options are SMTP or SENDGRID                                                                          | `SMTP`                            |
-| `dash.email.smtp.host`                                                      | Choose smtp host                                                                                                   | `localhost`                     |
-| `dash.email.smtp.port`                                                      | Choose smtp port                                                                                                   | `465`                           |
-| `dash.email.smtp.tlsRequired`                                               | Choose smtp tls authentication required or not                                                                     | `true`                    |
-| `dash.email.smtp.user`                                                      | Choose smtp username                                                                                               | `smtp`                          |
-| `dash.email.smtp.password`                                                  | Choose smtp password                                                                                               | `smtp`                          |
-| `dash.email.sendgridApiKey`                                                 | Choose email sendgridApiKey                                                                                        | ''                       |
-| `dash.email.senderEmail`                                                    | Choose email senderEmail                                                                                           | ``           |
-| `dash.email.enableSystemErrorEmail`                                         | Enable/disable system error email notifications                                                                    | `false`                 |
-| `dash.email.systemErrorMailTo`                                              | The email address to send system error emails to                                                                   | ``           |
+| `dash.email.method`                                                                                   | Email method options are SMTP or SENDGRID                                      | `SMTP`                               |
+| `dash.email.smtp.host`                                                                                | Choose smtp host                                                               | `localhost`                          |
+| `dash.email.smtp.port`                                                                                | Choose smtp port                                                               | `465`                                |
+| `dash.email.smtp.tlsRequired`                                                                         | Choose smtp tls authentication required or not                                 | `true`                               |
+| `dash.email.smtp.user`                                                                                | Choose smtp username                                                           | `smtp`                               |
+| `dash.email.smtp.password`                                                                            | Choose smtp password                                                           | `smtp`                               |
+| `dash.email.sendgridApiKey`                                                                           | Choose email sendgridApiKey                                                    | ''                                   |
+| `dash.email.senderEmail`                                                                              | Choose email senderEmail                                                       | ``                                   |
+| `dash.email.enableSystemErrorEmail`                                                                   | Enable/disable system error email notifications                                | `false`                              |
+| `dash.email.systemErrorMailTo`                                                                        | The email address to send system error emails to                               | ``                                   |
 |
-| **Dash Ingress Properties**                                                 |
+| **Dash Ingress Properties**                                                                           |                                                                                |                                      |
 |
-| `dash.ingress.hosts`                                                        | Add lists of hosts                                                                                                | ``                  |
-| `dash.ingress.path`                                                         | Add backend endpoint path                                                                                         | `/`                              |
-| `dash.ingress.k8sIngress.enabled`                                           | Set true to enable nginx ingress                                                                                  | `false`                  |
-| `dash.ingress.k8sIngress.annotations`                                       | Add annotations for nginx ingress                                                                                 | `kubernetes.io/ingress.class: nginx`                          |
-| `dash.ingress.k8sIngress.tls.secretName`                                    | K8s secret where certificate is stored                                                                | `tls-secret`                     |
-| `dash.ingress.k8sIngress.tls.hosts`                                         | Write hostname for apply tls                                                                                      | ``                  |
-| **Istio Config - VirtualService, DestinationRule, Gateway (optional), PeerAuthentication (optional)**
-| `dash.ingress.istio.enabled`                                                | Set true to enable Istio or false to disable                                                                      | `false`                  |
-| `dash.ingress.istio.gateways.create`                                        | Set true to enable create istio gateways                                                                          | `false`                  |
-| `dash.ingress.istio.gateways.gatewayRefs`                                   | Provide name to create istio gateway                                                                              | `istio-system/example`           |
-| `dash.ingress.istio.loadBalancerType`                                       | Write name of loadBalancerType                                                                                    | `ROUND_ROBIN`                    |
-| `dash.ingress.istio.mtlsMode`                                               | Set mtls mode, options are: PERMISSIVE or STRICT                                                                  | `PERMISSIVE`                     |
+| `dash.ingress.hosts`                                                                                  | Add lists of hosts                                                             | ``                                   |
+| `dash.ingress.path`                                                                                   | Add backend endpoint path                                                      | `/`                                  |
+| `dash.ingress.k8sIngress.enabled`                                                                     | Set true to enable nginx ingress                                               | `false`                              |
+| `dash.ingress.k8sIngress.annotations`                                                                 | Add annotations for nginx ingress                                              | `kubernetes.io/ingress.class: nginx` |
+| `dash.ingress.k8sIngress.tls.secretName`                                                              | K8s secret where certificate is stored                                         | `tls-secret`                         |
+| `dash.ingress.k8sIngress.tls.hosts`                                                                   | Write hostname for apply tls                                                   | ``                                   |
+| **Istio Config - VirtualService, DestinationRule, Gateway (optional), PeerAuthentication (optional)** |                                                                                |                                      |
+| `dash.ingress.istio.enabled`                                                                          | Set true to enable Istio or false to disable                                   | `false`                              |
+| `dash.ingress.istio.gateways.create`                                                                  | Set true to enable create istio gateways                                       | `false`                              |
+| `dash.ingress.istio.gateways.gatewayRefs`                                                             | Provide name to create istio gateway                                           | `istio-system/example`               |
+| `dash.ingress.istio.loadBalancerType`                                                                 | Write name of loadBalancerType                                                 | `ROUND_ROBIN`                        |
+| `dash.ingress.istio.mtlsMode`                                                                         | Set mtls mode, options are: PERMISSIVE or STRICT                               | `PERMISSIVE`                         |

@@ -1,7 +1,6 @@
 import {NgModule} from '@angular/core';
 import {SiteLogoDirective} from './directives/site-logo.directive';
 import {RbacDirective} from './directives/rbac.directive';
-import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
 import {MatDialogModule} from '@angular/material/dialog';
 import { GenericErrorDialogComponent } from './generic-error-dialog/generic-error-dialog.component';
 import {DatepickerComponent} from './datepicker-component/datepicker.component';
@@ -13,15 +12,23 @@ import {MatInputModule} from '@angular/material/input';
 import {CommonModule} from '@angular/common';
 import { CopyToClipboardButtonComponent } from './components/copy-to-clipboard-button/copy-to-clipboard-button.component';
 import {MatButtonModule} from '@angular/material/button';
+import {SideNavComponent} from './side-nav/side-nav.component';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {RouterModule, RouterOutlet} from '@angular/router';
+import {MatListModule} from '@angular/material/list';
+import { HideableTextComponent } from './components/hideable-text/hideable-text.component';
+import {USAPhoneMaskDirective} from './directives/usa-phone-mask.directive';
 
 @NgModule({
   declarations: [
-    ConfirmationDialogComponent,
     DatepickerComponent,
     GenericErrorDialogComponent,
+    USAPhoneMaskDirective,
     RbacDirective,
     SiteLogoDirective,
     CopyToClipboardButtonComponent,
+    SideNavComponent,
+    HideableTextComponent,
   ],
   imports: [
     MatDialogModule,
@@ -32,12 +39,19 @@ import {MatButtonModule} from '@angular/material/button';
     MatInputModule,
     CommonModule,
     MatButtonModule,
+    MatSidenavModule,
+    RouterOutlet,
+    RouterModule,
+    MatListModule,
   ],
   exports: [
     DatepickerComponent,
+    USAPhoneMaskDirective,
     RbacDirective,
     SiteLogoDirective,
     CopyToClipboardButtonComponent,
+    SideNavComponent,
+    HideableTextComponent,
   ]
 })
 export class SharedModule {

@@ -1,27 +1,29 @@
-import {AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator} from '@angular/material/paginator';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, ActivatedRoute } from '@angular/router';
-import { merge } from 'rxjs';
-import { AlertService } from '@full-fledged/alerts';
+import { merge, Subject } from 'rxjs';
+import { AlertService } from 'src/app/core/services/alert.service';
 import { DockerRegistriesCreateComponent } from '../docker-registries-create/docker-registries-create.component';
 import { IServerResponse } from '../../../../../core/entities/IServerResponse';
 import { DockerRegistriesService } from '../../../../../core/services/docker-registries.service';
 import { JwtAuthService } from '../../../../../core/services/jwt-auth.service';
 import { AlertDialogComponent } from '../../../../shared/alert-dialog/alert-dialog.component';
 import { IDockerRegistries } from '../../../../../core/entities/IDockerRegistries';
-import { DockerRegistryAuthTypes } from '../../../../../core/enum/DockerRegistryAuthTypes';
+import { take, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-docker-registries-list',
   templateUrl: './docker-registries-list.component.html',
   styleUrls: ['./docker-registries-list.component.scss']
 })
-export class DockerRegistriesListComponent implements OnInit, AfterViewInit {
+export class DockerRegistriesListComponent implements OnInit, AfterViewInit, OnDestroy {
+  unsubscribe$ = new Subject<void>();
   subMenuTitle = 'All Docker Registries';
-  displayedColumns: string[] = ['name', 'hostname', 'authType', 'username', 'password', 'actions'];
+  displayedColumns: string[] = ['name', 'hostname', 'authType', 'edit', 'delete'];
+  displayedColumnsNonAdmin: string[] = ['name', 'hostname', 'authType'];
   dataSource: MatTableDataSource<IDockerRegistries>;
   userId: number;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -33,6 +35,7 @@ export class DockerRegistriesListComponent implements OnInit, AfterViewInit {
   page = 0;
   totalCount = 0;
   data: IDockerRegistries[] = [];
+  isAdmin: boolean;
 
   constructor(
     private dockerRegistriesService: DockerRegistriesService,
@@ -41,7 +44,12 @@ export class DockerRegistriesListComponent implements OnInit, AfterViewInit {
     private jwtAuthService: JwtAuthService,
     private router: Router,
     private route: ActivatedRoute
-  ) { }
+  ) {
+    this.isAdmin = this.jwtAuthService.isAdmin();
+    if (!this.isAdmin) {
+      this.displayedColumns = this.displayedColumnsNonAdmin;
+    }
+  }
 
   ngOnInit(): void {
     this.subNavigationTitle = 'Docker Registries';
@@ -52,11 +60,19 @@ export class DockerRegistriesListComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    merge(this.route.queryParams, this.sort.sortChange).subscribe(() => this.getDockerRegistryList());
+    merge(this.route.queryParams, this.sort.sortChange)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(() => this.getDockerRegistryList());
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 
   getDockerRegistryList(){
     this.dockerRegistriesService.getAllDockerRegistries(this.page, this.limit, this.sort)
+      .pipe(take(1))
       .subscribe((response: IServerResponse<{totalCount: number; list: IDockerRegistries[]}>) => {
         if (response.data){
           this.totalCount = response.data.totalCount;
@@ -79,9 +95,9 @@ export class DockerRegistriesListComponent implements OnInit, AfterViewInit {
         dockerRegistry: isEdit ? dockerRegistryData : null
       }
     });
-    confirmDialog.afterClosed().subscribe(result => {
-      console.log('Closed.');
-      console.log(result);
+    confirmDialog.afterClosed()
+      .pipe(take(1))
+      .subscribe(result => {
       if (result === undefined) {
         this.getDockerRegistryList();
       }
@@ -107,7 +123,9 @@ export class DockerRegistriesListComponent implements OnInit, AfterViewInit {
       }
     });
 
-    openAddDockerRegistry.afterClosed().subscribe(result => {
+    openAddDockerRegistry.afterClosed()
+      .pipe(take(1))
+      .subscribe(result => {
       this.router.navigate(['/private/docker-registries/']);
     });
   }
